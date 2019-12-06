@@ -1,11 +1,6 @@
 # Derpy
 A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich King)
 
-## How to install
-Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and copy the "Derpy" folder into WoW Install Folder\Interface\AddOns.
-
-## How to use
-/derp or /derpy
 
 ## Passive/automatic functions
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
@@ -24,6 +19,12 @@ All of the passive functions can be toggled in-game.
 - **Book Club** -- Add TomTom waypoints for the Higher Learning achievement in Dalaran
 - **Random Pet** -- Summon a random pet companion with some snazzy random dialogue to go with it
 - **Silent Random Pet** -- Summon a random pet companion without the snazzy random dialogue (boring version)
+
+## How to install
+Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and copy the "Derpy" folder into WoW Install Folder\Interface\AddOns.
+
+## How to use
+**/derp** or **/derpy**
 
 Bug reports, pull requests, and feature requests are welcome!
 
