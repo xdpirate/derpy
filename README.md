@@ -1,6 +1,9 @@
 # Derpy
 A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich King)
 
+## How to install
+Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and copy the "Derpy" folder into WoW Install Folder\Interface\AddOns.
+
 ## How to use
 /derp or /derpy
 
