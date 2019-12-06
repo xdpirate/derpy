@@ -1,11 +1,10 @@
-## Interface: 40300
+## Interface: 30300
 ## Title-enGB: Derpy
-## Author: Derpderpderp
-## Version: 1.0
+## Author: Moontits/Kugalskap of Dalaran-WoW
+## Version: 2.0
 ## Notes: Hurr durr herp derp
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-##SavedVariables: AutoGZState, PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, ZoomState, MageShieldState, BattleDingState, PopState
+##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, ZoomState, MageShieldState, PopState, RepTrackState, InnervateState
 Derpy.lua
 Derpy.xml
-AboutPane.xml

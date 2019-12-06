@@ -1,133 +1,235 @@
-﻿-- Derpy v1.0
--- By Derpderpderp/Noaide of Ragnaros EU (Horde)
+﻿-- Derpy v2.0
+-- By Moontits/Kugalskap of Dalaran-WoW
+-- Formerly known as Derpderpderp and Noaide of Ragnaros EU
 
 -- You are free to redistribute and modify this addon, as long 
 -- as you give proper credit to me, the original author.
 
--- All comments and feature requests via Curse or CurseForge are wildly appreciated.
--- http://wow.curse.com/downloads/wow-addons/details/derpy.aspx
--- http://wow.curseforge.com/addons/derpy/
+color = "|cFF66EE66" -- We like green
+highlightColor = "|cFF9BFF00"
+original = "|r"
+CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
+repTrackLastTimestamp = time()
+lastInnervateMessageTime = nil
 
-color = "|cFF66EE66"; -- We like green
-original = "|r";
-CurrentLevelCap = 85; -- With lack of a function to retrieve this dynamically...
+innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
+dirgeLink = "\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r"
 
 function Derpy_OnLoad() -- Addon loaded
-	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy';
-	print(color.."Derpy v1.0 loaded"..original.." (/derp or /derpy)");
+	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy'
+	DerpyPrint("v2.0 loaded (/derp or /derpy)")
 	
-	local cxp = GetAccountExpansionLevel();
-	
-	if(cxp == 0) then -- Nag the user for being a cheap bastard
-		print("Why haven't you bought "..color.."The Burning Crusade"..original.." yet?");
-	elseif(cxp == 1) then
-		print("Why haven't you bought "..color.."Wrath of the Lich King"..original.." yet?");
-	elseif(cxp == 2) then
-		print("Why haven't you bought "..color.."Cataclysm"..original.." yet?");
-	end
-	
-	DerpyFrame:RegisterEvent("VARIABLES_LOADED"); -- So we can detect user preferences
-	DerpyFrame:RegisterEvent("CHAT_MSG_GUILD_ACHIEVEMENT"); -- For Auto-GZ function
-	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED"); -- For Party Achievement function
-	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP"); -- For Guild Ding function
-	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING"); -- For Rested function
-	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE"); -- For Monster Emote function
-
-	DerpyFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED"); -- ZOOOOOOOOOOM
+	DerpyFrame:RegisterEvent("VARIABLES_LOADED") -- So we can detect user preferences
+	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
+	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP") -- For Guild Ding function
+	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING") -- For Rested function
+	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE") -- For Monster Emote function
+	DerpyFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED") -- ZOOOOOOOOOOM
+	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
+	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate function
 end
 
-function SlashCmdList.DERPY(msg, editbox) -- Event handler for slash commands
+function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
+	msg = strlower(msg)
+	
 	if(msg == "hurr") then
-		print(color.."durr"..original); -- derp
-	elseif(msg == "wp") then
-		ShowWaypointsMenu();
-	elseif(msg == "raptor") then
-		ShowRaptorMenu();
-	elseif(msg == "raptor darting") then
-		RaptorWaypoints("darting");
-	elseif(msg == "raptor ravasaur") then
-		RaptorWaypoints("ravasaur");
-	elseif(msg == "fox") then
-		FoxWaypoints();
+		DerpyPrint("durr") -- derp
+	elseif(msg == "gray" or msg == "grey") then
+		PurgeGrayItems()
 	elseif(msg == "bookclub") then
-		HigherLearningWaypoints();
+		HigherLearningWaypoints()
     elseif(msg == "pet") then
-		RandomPet(0);
+		RandomPet(0)
     elseif(msg == "spet") then
-		RandomPet(1);
+		RandomPet(1)
 	elseif(msg == "hr") then
-		CompactRaidFrameManager:Hide();
+		CompactRaidFrameManager:Hide()
     elseif(msg == "shitstorm") then
-		InitiateShitstorm();
-    elseif(msg == "autogz") then
-		togglePassive("AutoGZ");
+		InitiateShitstorm()
 	elseif(msg == "pop") then
-		togglePassive("Pop");
+		togglePassive("Pop")
 	elseif(msg == "partyachi") then
-		togglePassive("PartyAchievement");
+		togglePassive("PartyAchievement")
 	elseif(msg == "rested") then
-		togglePassive("FullyRested");
+		togglePassive("FullyRested")
 	elseif(msg == "monster") then
-		togglePassive("MonsterEmote");
+		togglePassive("MonsterEmote")
 	elseif(msg == "zoom") then
-		togglePassive("Zoom");
+		togglePassive("Zoom")
 	elseif(msg == "mshield") then
-		togglePassive("MageShield");
-	elseif(msg == "bding") then
-		togglePassive("BattleDing");
+		togglePassive("MageShield")
 	elseif(msg == "gding") then
-		togglePassive("GuildDing");
+		togglePassive("GuildDing")
+    elseif(msg == "rep") then
+		togglePassive("RepTrack")
+    elseif(msg == "int" or msg == "innervate") then
+		togglePassive("Innervate")
     elseif(msg == "passive") then
 		ShowPassiveMenu();
-    elseif(msg == "dr") then
-		SendChatMessage("[Derpy] Raid disbanding!","RAID",nil);
-		for i=1,GetNumRaidMembers() do 
-			if ("raid"..i=="player") then 
-				-- Do nada, gotta remove everyone first
-			else 
-				UninviteUnit("raid"..i) 
-			end 
-		end
+    elseif(msg == "dr" or msg == "disband") then
+		DisbandRaid()
     elseif(msg == "about") then
-        AboutPane:Show();
-	elseif(msg == "") then
-		ShowUsage();
+        DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
+	elseif(msg == "" or msg == nil) then
+		ShowUsage()
 	else
-		ShowUsage();
+		ShowUsage()
+	end
+end
+
+function SendSlash(slashCommandToSend) -- Send a slash command
+	ChatFrame1EditBox:SetText("")
+	ChatFrame1EditBox:Insert("/"..slashCommandToSend)
+	ChatEdit_SendText(ChatFrame1EditBox)
+end
+
+function DerpyPrint(msg) -- Print a chat frame message in Derpy format
+	print(color.."[Derpy]"..original.." "..msg)
+end
+
+function highlight(msg) -- Highlight a piece of text
+	return highlightColor..msg..original
+end
+
+function ShowUsage() -- Show available functions
+	DerpyPrint("Usage: "..color.."/derp "..highlight("<command>"))
+	DerpyPrint("Available commands:")
+	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
+	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
+	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
+	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
+	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
+	DerpyPrint(highlight("spet").." -- Summon a random companion pet "..highlight("without").." the snazzy summoning dialogue")
+	DerpyPrint(highlight("dr/disband").." -- Disband a raid group you are the leader of")
+	DerpyPrint(highlight("hr").." -- Hide the pesky Blizzard Compact Raid Frames")
+	DerpyPrint(highlight("about").." -- Show information on who made this addon")
+end
+
+function ShowPassiveMenu() -- List states and descriptions of passive functions
+	DerpyPrint("Toggle passive features:"..original)
+	DerpyPrint(highlight("partyachi").." -- Toggle Party Achievement notification (Currently "..highlight(PartyAchievementState)..")")
+	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
+	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
+	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
+	DerpyPrint(highlight("zoom").." -- Toggle Mage Blink slogans/emotes (Currently "..highlight(ZoomState)..")")
+	DerpyPrint(highlight("pop").." -- Toggle Warlock Teleport slogans/emotes (Currently "..highlight(PopState)..")")
+	DerpyPrint(highlight("mshield").." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..highlight(MageShieldState)..")")
+	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
+	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast "..innervateLink.." on (Currently "..highlight(InnervateState)..")")
+end
+
+function togglePassive(which) -- Toggle passive functions on/off
+	if(which=="RepTrack") then
+		if(RepTrackState == "ON") then
+			RepTrackState = "OFF"
+		else
+			RepTrackState = "ON"
+		end
+		DerpyPrint("RepTrack is now "..RepTrackState..".")
+	elseif(which=="Innervate") then
+		if(InnervateState == "ON") then
+			InnervateState = "OFF"
+		else
+			InnervateState = "ON"
+		end
+		DerpyPrint("Innervate whispers are now "..InnervateState..".")
+	elseif(which=="MageShield") then
+		if(MageShieldState == "ON") then
+			MageShieldState = "OFF"
+		else
+			MageShieldState = "ON"
+		end
+		DerpyPrint("Mage Shield is now "..MageShieldState..".")
+	elseif(which=="GuildDing") then
+		if(GuildDingState == "ON") then
+			GuildDingState = "OFF"
+		else
+			GuildDingState = "ON"
+		end
+		DerpyPrint("Guild Ding is now "..GuildDingState..".")
+	elseif(which=="FullyRested") then
+		if(FullyRestedState == "ON") then
+			FullyRestedState = "OFF"
+		else
+			FullyRestedState = "ON"
+		end
+		DerpyPrint("Rested is now "..FullyRestedState..".")
+	elseif(which=="Zoom") then
+		if(ZoomState == "ON") then
+			ZoomState = "OFF"
+		else
+			ZoomState = "ON"
+		end
+		DerpyPrint("ZOOM is now "..ZoomState..".")
+	elseif(which=="Pop") then
+		if(PopState == "ON") then
+			PopState = "OFF"
+		else
+			PopState = "ON"
+		end
+		DerpyPrint("POP is now "..PopState..".")
+	elseif(which=="MonsterEmote") then
+		if(MonsterEmoteState == "ON") then
+			MonsterEmoteState = "OFF"
+		else
+			MonsterEmoteState = "ON"
+		end
+		DerpyPrint("Monster Emote is now "..MonsterEmoteState..".")
+	elseif(which=="PartyAchievement") then
+		if(PartyAchievementState == "ON") then
+			PartyAchievementState = "OFF"
+		else
+			PartyAchievementState = "ON"
+		end
+		DerpyPrint("Party Achievement is now "..PartyAchievementState..".")
 	end
 end
 
 function Derpy_OnEvent(self, event, ...) -- Event handler
-	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 = ...; -- This shit is stupid, why did they change this?
+	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 = ...;
 	if(event=="VARIABLES_LOADED") then
-		if AutoGZState == nil then
-			AutoGZState = "OFF"; -- Defaults to off, because it's shit and can be wildly annoying to guildies
-		end
+		CombatTextSetActiveUnit("player") -- For RepTrack to work
+		
 		if PartyAchievementState == nil then
-			PartyAchievementState = "ON"; -- Defaults to on, because it's some hardcore stuff
+			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 		end
 		if MonsterEmoteState == nil then
-			MonsterEmoteState = "ON"; -- Defaults to on, because it's useful
+			MonsterEmoteState = "ON" -- Defaults to on, because it's useful
 		end
 		if GuildDingState == nil then
-			GuildDingState = "ON"; -- Defaults to on, because it's useful, braggy and gz-inducing
+			GuildDingState = "OFF" -- Defaults to off, because it's cancerous
 		end
 		if FullyRestedState == nil then
-			FullyRestedState = "ON"; -- Defaults to on, because people never pay attention to the resting icon on their character frame
+			FullyRestedState = "ON" -- Defaults to on, because people never pay attention to the resting icon on their character frame
 		end
 		if ZoomState == nil then
-			ZoomState = "ON"; -- Defaults to on, because ZOOOOOOOOOM
+			ZoomState = "OFF" -- Defaults to off, because it's cancerous
 		end
 		if PopState == nil then
-			PopState = "ON"; -- Default to on, because POP
+			PopState = "OFF" -- Default to off, because it's cancerous
 		end
 		if MageShieldState == nil then
-			MageShieldState = "ON"; -- Defaults to on, because it's useful
+			MageShieldState = "OFF" -- Default to off, because it isn't extremely useful
 		end
-		if BattleDingState == nil then
-			BattleDingState = "ON"; -- Defaults to on, because it's useful
+		if RepTrackState == nil then
+			RepTrackState = "ON" -- Defaults to on, because it's useful
 		end
-	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- ZOOOOOOOOOOOOM
+		if InnervateState == nil then
+			InnervateState = "ON" -- Defaults to on, because it's useful
+		end
+		
+	elseif(event=="UNIT_AURA") then -- Innervate notifier
+		if(InnervateState~="OFF") then
+			receivingUnit = arg1
+			_, _, _, _, _, _, _, unitCaster = UnitAura(receivingUnit, "Innervate")
+			if(unitCaster ~= nil and receivingUnit ~= nil and unitCaster == "player" and receivingUnit ~= unitCaster and UnitName(unitCaster) ~= UnitName(receivingUnit)) then
+				if(lastInnervateMessageTime == nil or time() - lastInnervateMessageTime > 10) then
+					lastInnervateMessageTime = time()
+					SendChatMessage("\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on you!", "WHISPER", nil, GetUnitName(receivingUnit))
+				end
+			end
+		end
+	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- Zoom
 		if(ZoomState~="OFF") then
 			if(arg1=="player" and arg2 == "Blink") then
 				local sayings = {
@@ -137,18 +239,19 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 					"blinks forward with reckless abandon."--4
 				};
 				
-				local chosen = math.random(4);
+				local chosen = math.random(4)
 				
-				local channel;
+				local channel
 				if(chosen == 4) then
-					channel = "EMOTE";
+					channel = "EMOTE"
 				else
-					channel = "SAY";
+					channel = "SAY"
 				end
 				
-				SendChatMessage(sayings[chosen], channel, nil);
+				SendChatMessage(sayings[chosen], channel, nil)
 			end
 		end
+		
 		if(PopState~="OFF") then
 			if(arg1=="player" and arg2 == "Demonic Circle: Teleport") then
 				local sayings = {
@@ -157,24 +260,25 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 					"MAGIC!",--3
 					"Now you see me, now you don't.",--4
 					"vanishes from sight and suddenly reappears within 40 yards!"--5
-				};
+				}
 				
-				local chosen = math.random(5);
+				local chosen = math.random(5)
 				
-				local channel;
+				local channel
 				if(chosen == 5) then
-					channel = "EMOTE";
+					channel = "EMOTE"
 				else
-					channel = "SAY";
+					channel = "SAY"
 				end
 				
-				SendChatMessage(sayings[chosen], channel, nil);
+				SendChatMessage(sayings[chosen], channel, nil)
 			end
 		end
+		
 		if(MageShieldState~="OFF") then
 			if(IsAddOnLoaded("DBM-Core") == 1) then
 				if(arg1=="player" and arg2 == "Ice Barrier") then
-					SendSlash("dbm timer 24 Ice Barrier");
+					SendSlash("dbm timer 24 Ice Barrier")
 				elseif(arg1=="player" and arg2 == "Mana Shield") then
 					local secs = 12; -- Unmodified Mana Shield cooldown
 					local count = 1;
@@ -184,112 +288,131 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 							if(glyphType==1) then -- Skip Prime and Minor glyphs (MS Glyph is Major)
 								if(glyphSpellID~=nil) then -- Skip if the slot is empty
 									if(glyphSpellID==70937) then -- Glyph of Mana Shield Spell ID
-										secs = 10;
+										secs = 10
 									end
 								end
 							end
 						end
-						count = count + 1;
+						count = count + 1
 					end
-					SendSlash("dbm timer "..secs.." Mana Shield");
+					SendSlash("dbm timer "..secs.." Mana Shield")
 				end
 			end
 		end
+		
 	elseif(event=="CHAT_MSG_MONSTER_EMOTE") then -- Monster Emote function
 		if(MonsterEmoteState~="OFF") then
 			UIErrorsFrame:Clear()
-			UIErrorsFrame:AddMessage(string.gsub(arg1, "%%s", arg2), 1.0, 0.5, 0.25, GetChatTypeIndex("MONSTER_EMOTE"), 5);
+			UIErrorsFrame:AddMessage(string.gsub(arg1, "%%s", arg2), 1.0, 0.5, 0.25, GetChatTypeIndex("MONSTER_EMOTE"), 5)
 		end
+		
 	elseif(event=="PLAYER_UPDATE_RESTING") then -- Rested function
-		if(UnitLevel("player") < CurrentLevelCap) then
-			if(FullyRestedState~="OFF") then
-				if(IsResting()==1) then
-					print(color.."[Derpy]"..original.." You are now resting.");
-				elseif(IsResting()==nil) then
-					restedXP = GetXPExhaustion();
-					if(restedXP == nil) then
-						print(color.."[Derpy]"..original.." You are no longer resting, but did not gain any rested XP.");
-					else
-						print(color.."[Derpy]"..original.." You are no longer resting, and have accumulated "..restedXP.." rested XP.");
-					end
+		if(FullyRestedState~="OFF") then
+			if(IsResting()==1) then
+				DerpyPrint("You are now resting.")
+			elseif(IsResting()==nil) then
+				restedXP = GetXPExhaustion()
+				
+				if restedXP == nil then restedXP = 0 end
+				if(UnitLevel("player") < CurrentLevelCap) then
+					DerpyPrint("You are no longer resting ("..restedXP.." rested XP)")
+				else
+					DerpyPrint("You are no longer resting")
 				end
 			end
 		end
+		
 	elseif(event=="ACHIEVEMENT_EARNED") then -- Party Achievement function
 		if(PartyAchievementState~="OFF") then
 			if(GetNumPartyMembers() > 0) then
-				partyAchivementLink = GetAchievementLink(arg1);
-				SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "PARTY", nil);
+				partyAchivementLink = GetAchievementLink(arg1)
+				SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "PARTY", nil)
 				
 				if(GetNumRaidMembers() > 0) then
-					SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "RAID", nil);
+					SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "RAID", nil)
 				end
 			end
 		end
+		
 	elseif(event=="PLAYER_LEVEL_UP") then -- Guild Ding function
 		if(GuildDingState~="OFF") then
 			if(IsInGuild()==1) then
-				SendChatMessage("[Derpy] Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil);
+				SendChatMessage("[Derpy] Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil)
 			end
 		end
-		if(BattleDingState~="OFF") then
-			BNSetCustomMessage("Ding! "..UnitName("player").." just reached level "..arg1.."!");
-		end
-	elseif(event=="CHAT_MSG_GUILD_ACHIEVEMENT") then -- Auto-GZ function
-		if(AutoGZState~="OFF") then
-			if arg2 ~= UnitName("player") then
-				SendChatMessage("gz", "GUILD", nil);
+		
+	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack - Automatically change watched faction when you gain rep
+		if(RepTrackState~="OFF") then
+			if(arg1=="FACTION") then
+				currGainedFaction = arg2
+				repGain = arg3
+				if(repGain > 0) then -- Ignore negative reputation
+					if(difftime(time(), repTrackLastTimestamp) > 1) then -- Avoids changing watched faction rapidly on multiple gains within a couple of seconds
+						numFactions = GetNumFactions()
+						for factionCounter = 0, numFactions, 1
+						do
+							factionName = GetFactionInfo(factionCounter)
+							if(factionName == currGainedFaction) then
+								currWatched = GetWatchedFactionInfo()
+								if(currGainedFaction~=currWatched) then
+									DerpyPrint("Changed watched faction to "..factionName.."!")
+								end
+								
+								SetWatchedFactionIndex(factionCounter)
+								repTrackLastTimestamp = time() -- Record timestamp of last watched faction change time
+								break
+							end
+						end
+					end
+				end				
 			end
 		end
 	end
 end
 
-function SendSlash(slashCommandToSend) -- Send a slash command
-	ChatFrame1EditBox:SetText("");
-	ChatFrame1EditBox:Insert("/"..slashCommandToSend);
-	ChatEdit_SendText(ChatFrame1EditBox);
-end
-
-function ShowUsage() -- Show available functions
-	print("Available commands:");
-	print(color.."/derp wp"..original.." -- Add waypoints for various stuff (Req. TomTom)");
-	print(color.."/derp shitstorm"..original.." -- Initiate a Trade shitstorm, TBC-style");
-	print(color.."/derp passive"..original.." -- Toggle/view passive/automatic functions");
-	print(color.."/derp pet"..original.." -- Summon a random companion pet "..color.."with"..original.." snazzy summoning dialogue");
-	print(color.."/derp spet"..original.." -- Summon a random companion pet "..color.."without"..original.." the snazzy summoning dialogue");
-	print(color.."/derp dr"..original.." -- Disband a raid group you are the leader of");
-	print(color.."/derp hr"..original.." -- Hide the pesky Blizzard Compact Raid Frames");
-	print(color.."/derp about"..original.." -- Show a fancy About-window");
-end
-
-function TitleInfo() -- Only a barebones title info function as of yet, not currently good for anything
-	if(GetTitleName(GetCurrentTitle())~=nil) then 
-		print("You are currently wearing the \""..strtrim(GetTitleName(GetCurrentTitle()), " ").."\" title.") 
-	else
-		print("You are currently not wearing a title.");
+function PurgeGrayItems() -- Delete all gray items from bags
+	purgeCount = 0
+	
+	for bag=0,4 
+	do 
+		for slot = 1,GetContainerNumSlots(bag) 
+		do 
+			link = GetContainerItemLink(bag, slot) 
+			if link then 
+				_, _, rarity = GetItemInfo(link) 
+				if (rarity == 0) then 
+					PickupContainerItem(bag, slot) 
+					DeleteCursorItem() 
+					purgeCount = purgeCount + 1
+				end
+			end 
+		end 
+	end
+	
+	if(purgeCount > 0) then
+		DerpyPrint("Purged "..purgeCount.." |4gray item:gray items; from your bags.")
 	end
 end
 
-function ShowPassiveMenu() -- List states and descriptions of passive functions
-	print(color.."Toggle passive features:"..original);
-	print(color.."/derp autogz"..original.." -- Toggle guild achievements Auto-GZ (Currently "..AutoGZState..")");
-	print(color.."/derp partyachi"..original.." -- Toggle Party Achievement notification (Currently "..PartyAchievementState..")");
-	print(color.."/derp gding"..original.." -- Toggle Guild Ding notifications (Currently "..GuildDingState..")");
-	print(color.."/derp bding"..original.." -- Toggle BattleNet Ding broadcasts (Currently "..GuildDingState..")");
-	print(color.."/derp rested"..original.." -- Toggle resting notifications (Currently "..FullyRestedState..")");
-	print(color.."/derp monster"..original.." -- Toggle emphasis of monster emotes in error frame (Currently "..MonsterEmoteState..")");
-	print(color.."/derp zoom"..original.." -- Toggle Mage Blink slogans/emotes (Currently "..ZoomState..")");
-	print(color.."/derp pop"..original.." -- Toggle Warlock Teleport slogans/emotes (Currently "..PopState..")");
-	print(color.."/derp mshield"..original.." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..MageShieldState..")");
+function DisbandRaid() -- Remove all raid members
+	numRaidMems = GetNumRaidMembers()
+	if(numRaidMems > 1 and numRaidMems ~= nil) then
+		SendChatMessage("[Derpy] Raid disbanding!","RAID",nil);
+		for i = 1, GetNumRaidMembers() do 
+			if("raid"..i~="player") then 
+				UninviteUnit("raid"..i)
+			end
+		end
+	end
 end
 
 function RandomPet(silent) -- Summon a random pet with or without funky dialogue
 	if(IsFlying()==1) then
-		print(color.."[Derpy]"..original.." Silly "..UnitClass("player")..", you can't summon a pet while flying!");
+		DerpyPrint("Silly "..UnitClass("player")..", you can't summon a pet while flying!");
 	elseif(UnitIsDeadOrGhost("player")) then
-		print(color.."[Derpy]"..original.." Silly "..UnitClass("player")..", you can't summon a pet whilst dead!");
+		DerpyPrint("Silly "..UnitClass("player")..", you can't summon a pet whilst dead!");
 	elseif(GetNumCompanions("CRITTER") == 0 or GetNumCompanions("CRITTER") == nil) then
-		print(color.."[Derpy]"..original.." Silly "..UnitClass("player")..", you have no pets to summon!");
+		DerpyPrint("Silly "..UnitClass("player")..", you have no pets to summon!");
 	else
 		local petId = math.random(GetNumCompanions("CRITTER"));
 		local id, creatureName = GetCompanionInfo("CRITTER", petId);
@@ -315,7 +438,7 @@ function RandomPet(silent) -- Summon a random pet with or without funky dialogue
 			"CRITTER is my favorite. Maybe.",--17
 			"My, oh my, is that CRITTER I spy?",--18
 			"Y HARO THAR CRITTER"--19
-		};
+		}
 		
 		-- COUNT THE ARRAY, HARDCORE STYLE
 		i = 0;
@@ -355,156 +478,23 @@ function RandomPet(silent) -- Summon a random pet with or without funky dialogue
 	end
 end
 
-function togglePassive(which) -- Toggle passive functions on/off
-	if(which=="AutoGZ") then
-		if(AutoGZState == "ON") then
-			AutoGZState = "OFF";
-		else
-			AutoGZState = "ON";
-		end
-		print(color.."Auto-GZ is now "..AutoGZState..".");
-	elseif(which=="BattleDing") then
-		if(BattleDingState == "ON") then
-			BattleDingState = "OFF";
-		else
-			BattleDingState = "ON";
-		end
-		print(color.."BattleNet Ding is now "..BattleDingState..".");
-	elseif(which=="MageShield") then
-		if(MageShieldState == "ON") then
-			MageShieldState = "OFF";
-		else
-			MageShieldState = "ON";
-		end
-		print(color.."Mage Shield is now "..MageShieldState..".");
-	elseif(which=="GuildDing") then
-		if(GuildDingState == "ON") then
-			GuildDingState = "OFF";
-		else
-			GuildDingState = "ON";
-		end
-		print(color.."Guild Ding is now "..GuildDingState..".");
-	elseif(which=="FullyRested") then
-		if(FullyRestedState == "ON") then
-			FullyRestedState = "OFF";
-		else
-			FullyRestedState = "ON";
-		end
-		print(color.."Rested is now "..FullyRestedState..".");
-	elseif(which=="Zoom") then
-		if(ZoomState == "ON") then
-			ZoomState = "OFF";
-		else
-			ZoomState = "ON";
-		end
-		print(color.."ZOOM is now "..ZoomState..".");
-	elseif(which=="Pop") then
-		if(PopState == "ON") then
-			PopState = "OFF";
-		else
-			PopState = "ON";
-		end
-		print(color.."POP is now "..PopState..".");
-	elseif(which=="MonsterEmote") then
-		if(MonsterEmoteState == "ON") then
-			MonsterEmoteState = "OFF";
-		else
-			MonsterEmoteState = "ON";
-		end
-		print(color.."Monster Emote is now "..MonsterEmoteState..".");
-	elseif(which=="PartyAchievement") then
-		if(PartyAchievementState == "ON") then
-			PartyAchievementState = "OFF";
-		else
-			PartyAchievementState = "ON";
-		end
-		print(color.."Party Achievement is now "..PartyAchievementState..".");
-	end
-end
-
-function InitiateShitstorm() -- Initiate a trade shitstorm by linking [Dirge] in trade. Note: Trade must be channel #2.
-	local n, dirgeLink = GetItemInfo(23555);
-	
-	if(dirgeLink ~= nil) then
-		SendChatMessage(dirgeLink, "CHANNEL", nil, 2);
-	else
-		print(color.."The requested itemLink was unavailable, but should be available now. Please try again."..original);
-	end
-end
-
-function ShowWaypointsMenu() -- List available TomTom waypoints options
-	print(color.."NOTE: These options require that you have the TomTom addon installed!"..original);
-	print(color.."/derp raptor"..original.." -- Add waypoints for raptor pets to map");
-	print(color.."/derp bookclub"..original.." -- Add waypoints for "..GetAchievementLink(1956).." to map");
-	print(color.."/derp fox"..original.." -- Add waypoints for Baradin Foxes in TB to map");
-end
-
-function ShowRaptorMenu() -- Show available raptor functions
-	local n, ravasaurLink = GetItemInfo(48122);
-	local n, dartingLink = GetItemInfo(48112);
-	
-	if(ravasaurLink == nil or dartingLink == nil) then -- Can't be bothered caching these, just don't show a link if they're not available
-		print(color.."/derp raptor ravasaur"..original.." -- Un'Goro Crater waypoints for Ravasaur Hatchling on your map");
-		print(color.."/derp raptor darting"..original.." -- Dustwallow Marsh waypoints for Darting Hatchling on your map");
-	else
-		print(color.."/derp raptor ravasaur"..original.." -- Un'Goro Crater waypoints for "..ravasaurLink.." on your map");
-		print(color.."/derp raptor darting"..original.." -- Dustwallow Marsh waypoints for "..dartingLink.." on your map");
-	end
-end
-
-function RaptorWaypoints(race) -- Set up raptor spawn points on map
-	if(IsAddOnLoaded("TomTom") == 1) then
-		if(race == "ravasaur") then
-			location = "Un'Goro Crater";
-			description = "Ravasaur Matriarch's Nest";
-			coordinates = {"68.9 61.2", "63.0 63.2", "62.2 65.2", "62.0 73.6", "68.9 66.6"};
-		elseif(race == "darting") then
-			location = "Dustwallow Marsh";
-			description = "Dart's Nest";
-			coordinates = {"48.0 14.2", "46.5 17.2", "49.2 17.5", "47.9 19.0"}
-		end
-		
-		local i = 1;
-		while coordinates[i] ~= nil do
-			SendSlash("way " .. location .. " " .. coordinates[i] .. " " .. description);
-			i = i + 1;
-		end
-
-		SendSlash("cway");
-	else
-		print(color.."[Derpy]"..original.." You must have "..color.."TomTom"..original.." installed and enabled to use this function.");
-	end
-end
-
-function FoxWaypoints()
-	if(IsAddOnLoaded("TomTom") == 1) then
-		location = "Tol Barad Peninsula";
-		description = "Baradin Fox";
-		coordinates = {"33.86 42.88", "32.77 47.71", "35.24 55.89", "33.81 59.27", "40.49 54.43", "50.14 67.66", "49.89 74.69", "56.84 72.95", "67.46 76.76", "67.38 65.44", "70.45 61.10", "51.94 58.43", "50.14 46.07", "47.17 42.05", "48.02 35.89", "52.41 39.69"};
-		local i = 1;
-		while coordinates[i] ~= nil do
-			SendSlash("way " .. location .. " " .. coordinates[i] .. " " .. description);
-			i = i + 1;
-		end
-
-		SendSlash("cway");
-	else
-		print(color.."[Derpy]"..original.." You must have "..color.."TomTom"..original.." installed and enabled to use this function.");
-	end
+function InitiateShitstorm() -- Initiate a shitstorm by giving you a link to [Dirge].
+	DerpyPrint("Here's your shitstorm link: "..dirgeLink..". Enjoy!")
 end
 
 function HigherLearningWaypoints() -- Set up Higher Learning waypoints on map
 	if(IsAddOnLoaded("TomTom") == 1) then
-		location = "Dalaran";
-		description = {"Abjuration", "Transmutation", "Necromancy", "Enchantment", "Conjuration", "Divination", "Introduction", "Illusion"};
-		coordinates = {"52.2 54.8", "46.8 40.0", " 46.8 39.1", "43.6 46.7", "31.0 46.7", "26.5 52.2", "56.7 45.5", "64.4 52.4"};
+		location = "Dalaran"
+		description = {"Abjuration", "Transmutation", "Necromancy", "Enchantment", "Conjuration", "Divination", "Introduction", "Illusion"}
+		coordinates = {"52.2 54.8", "46.8 40.0", " 46.8 39.1", "43.6 46.7", "31.0 46.7", "26.5 52.2", "56.7 45.5", "64.4 52.4"}
 		
-		local i = 1;
-		while coordinates[i] ~= nil do
-			SendSlash("way " .. location .. " " .. coordinates[i] .. " The Schools of Arcane Magic - " .. description[i]);
-			i = i + 1;
+		local i = 1
+		while coordinates[i] ~= nil
+		do
+			SendSlash("way " .. location .. " " .. coordinates[i] .. " The Schools of Arcane Magic - " .. description[i])
+			i = i + 1
 		end
 	else
-		print(color.."[Derpy]"..original.." You must have "..color.."TomTom"..original.." installed and enabled to use this function.");
+		DerpyPrint("You must have "..highlight("TomTom").." installed and enabled to use this function.")
 	end
 end
