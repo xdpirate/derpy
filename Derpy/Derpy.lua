@@ -62,6 +62,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		ShowPassiveMenu();
     elseif(msg == "dr" or msg == "disband") then
 		DisbandRaid()
+    elseif(msg == "speed") then
+		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%");
     elseif(msg == "about") then
         DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
 	elseif(msg == "" or msg == nil) then
@@ -90,6 +92,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint("Available commands:")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
+	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
 	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
