@@ -46,16 +46,12 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		CompactRaidFrameManager:Hide()
     elseif(msg == "shitstorm") then
 		InitiateShitstorm()
-	elseif(msg == "pop") then
-		togglePassive("Pop")
 	elseif(msg == "partyachi") then
 		togglePassive("PartyAchievement")
 	elseif(msg == "rested") then
 		togglePassive("FullyRested")
 	elseif(msg == "monster") then
 		togglePassive("MonsterEmote")
-	elseif(msg == "zoom") then
-		togglePassive("Zoom")
 	elseif(msg == "mshield") then
 		togglePassive("MageShield")
 	elseif(msg == "gding") then
@@ -111,8 +107,6 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
-	DerpyPrint(highlight("zoom").." -- Toggle Mage Blink slogans/emotes (Currently "..highlight(ZoomState)..")")
-	DerpyPrint(highlight("pop").." -- Toggle Warlock Teleport slogans/emotes (Currently "..highlight(PopState)..")")
 	DerpyPrint(highlight("mshield").." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..highlight(MageShieldState)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast "..innervateLink.." on (Currently "..highlight(InnervateState)..")")
@@ -154,20 +148,6 @@ function togglePassive(which) -- Toggle passive functions on/off
 			FullyRestedState = "ON"
 		end
 		DerpyPrint("Rested is now "..FullyRestedState..".")
-	elseif(which=="Zoom") then
-		if(ZoomState == "ON") then
-			ZoomState = "OFF"
-		else
-			ZoomState = "ON"
-		end
-		DerpyPrint("ZOOM is now "..ZoomState..".")
-	elseif(which=="Pop") then
-		if(PopState == "ON") then
-			PopState = "OFF"
-		else
-			PopState = "ON"
-		end
-		DerpyPrint("POP is now "..PopState..".")
 	elseif(which=="MonsterEmote") then
 		if(MonsterEmoteState == "ON") then
 			MonsterEmoteState = "OFF"
@@ -202,12 +182,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if FullyRestedState == nil then
 			FullyRestedState = "ON" -- Defaults to on, because people never pay attention to the resting icon on their character frame
 		end
-		if ZoomState == nil then
-			ZoomState = "OFF" -- Defaults to off, because it's cancerous
-		end
-		if PopState == nil then
-			PopState = "OFF" -- Default to off, because it's cancerous
-		end
 		if MageShieldState == nil then
 			MageShieldState = "OFF" -- Default to off, because it isn't extremely useful
 		end
@@ -229,52 +203,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end
 			end
 		end
-	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- Zoom
-		if(ZoomState~="OFF") then
-			if(arg1=="player" and arg2 == "Blink") then
-				local sayings = {
-					"SWOOSH", --1
-					"ZOOOOOM",--2
-					"BLINK!",--3
-					"blinks forward with reckless abandon."--4
-				};
-				
-				local chosen = math.random(4)
-				
-				local channel
-				if(chosen == 4) then
-					channel = "EMOTE"
-				else
-					channel = "SAY"
-				end
-				
-				SendChatMessage(sayings[chosen], channel, nil)
-			end
-		end
-		
-		if(PopState~="OFF") then
-			if(arg1=="player" and arg2 == "Demonic Circle: Teleport") then
-				local sayings = {
-					"POP", --1
-					"BÆRT",--2
-					"MAGIC!",--3
-					"Now you see me, now you don't.",--4
-					"vanishes from sight and suddenly reappears within 40 yards!"--5
-				}
-				
-				local chosen = math.random(5)
-				
-				local channel
-				if(chosen == 5) then
-					channel = "EMOTE"
-				else
-					channel = "SAY"
-				end
-				
-				SendChatMessage(sayings[chosen], channel, nil)
-			end
-		end
-		
+	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- Mage Shields
 		if(MageShieldState~="OFF") then
 			if(IsAddOnLoaded("DBM-Core") == 1) then
 				if(arg1=="player" and arg2 == "Ice Barrier") then
