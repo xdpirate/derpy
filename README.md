@@ -26,6 +26,7 @@ Click the green "Clone or download"-button, then "Download ZIP". Open the archiv
 ## How to use
 **/derp** or **/derpy**
 
+## Misc
 Bug reports, pull requests, and feature requests are welcome!
 
 In my defense, the slogans for the random pet functions are from 2011, when I originally made this addon, and in dire need of updates (and chemotherapy).
