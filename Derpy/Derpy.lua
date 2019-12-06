@@ -42,8 +42,6 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		RandomPet(0)
     elseif(msg == "spet") then
 		RandomPet(1)
-	elseif(msg == "hr") then
-		CompactRaidFrameManager:Hide()
     elseif(msg == "shitstorm") then
 		InitiateShitstorm()
 	elseif(msg == "partyachi") then
@@ -97,7 +95,6 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
 	DerpyPrint(highlight("spet").." -- Summon a random companion pet "..highlight("without").." the snazzy summoning dialogue")
 	DerpyPrint(highlight("dr/disband").." -- Disband a raid group you are the leader of")
-	DerpyPrint(highlight("hr").." -- Hide the pesky Blizzard Compact Raid Frames")
 	DerpyPrint(highlight("about").." -- Show information on who made this addon")
 end
 
