@@ -1,0 +1,11 @@
+## Interface: 40300
+## Title-enGB: Derpy
+## Author: Derpderpderp
+## Version: 1.0
+## Notes: Hurr durr herp derp
+## DefaultState: Enabled
+## LoadOnDemand: 0
+##SavedVariables: AutoGZState, PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, ZoomState, MageShieldState, BattleDingState, PopState
+Derpy.lua
+Derpy.xml
+AboutPane.xml
