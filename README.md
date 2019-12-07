@@ -15,6 +15,7 @@ All of the passive functions can be toggled in-game.
 
 ## Activated functions
 - **Gray** -- Purge all gray items from your bags
+- **Bag Worth** -- Show the total worth of the items in your bags
 - **Raid Disband** -- Completely disband a raid group you are the leader of
 - **Book Club** -- Add TomTom waypoints for the Higher Learning achievement in Dalaran
 - **Random Pet** -- Summon a random pet companion with some snazzy random dialogue to go with it

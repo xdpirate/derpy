@@ -34,6 +34,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 	
 	if(msg == "hurr") then
 		DerpyPrint("durr") -- derp
+	elseif(msg == "bagworth") then
+		BagWorth()
 	elseif(msg == "gray" or msg == "grey") then
 		PurgeGrayItems()
 	elseif(msg == "bookclub") then
@@ -92,6 +94,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint("Available commands:")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
+	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
@@ -329,6 +332,32 @@ function PurgeGrayItems() -- Delete all gray items from bags
 		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
 	else
 		DerpyPrint("You have no gray items in your bags.")
+	end
+end
+
+function BagWorth() -- Not a reappropriation of PurgeGrayItems() at all, no sir, not on my watch
+	totalItemCount = 0
+	runningGoldCount = 0
+	
+	for bag=0,4 
+	do 
+		for slot = 1,GetContainerNumSlots(bag) 
+		do 
+			link = GetContainerItemLink(bag, slot)
+			_, itemCount = GetContainerItemInfo(bag, slot)
+			
+			if link then
+				totalItemCount = totalItemCount + itemCount
+				itemSellPrice = select(11, GetItemInfo(link))
+				runningGoldCount = runningGoldCount + (itemSellPrice * itemCount)
+			end 
+		end 
+	end
+	
+	if(totalItemCount > 0) then
+		DerpyPrint("You have "..totalItemCount.." |4item in your bags. If you had sold it:items in your bags. If you had sold them; to a vendor, you would have made "..GetCoinTextureString(runningGoldCount)..".")
+	else
+		DerpyPrint("You have no items in your bags.")
 	end
 end
 
