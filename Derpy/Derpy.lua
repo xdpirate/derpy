@@ -301,25 +301,34 @@ end
 
 function PurgeGrayItems() -- Delete all gray items from bags
 	purgeCount = 0
+	wastedGoldCount = 0
 	
 	for bag=0,4 
 	do 
 		for slot = 1,GetContainerNumSlots(bag) 
 		do 
-			link = GetContainerItemLink(bag, slot) 
-			if link then 
-				_, _, rarity = GetItemInfo(link) 
-				if (rarity == 0) then 
+			link = GetContainerItemLink(bag, slot)
+			_, itemCount = GetContainerItemInfo(bag, slot)
+			
+			if link then
+				itemInfo = {GetItemInfo(link)}
+				rarity = select(3, unpack(itemInfo))
+				itemSellPrice = select(11, unpack(itemInfo))
+				
+				if (rarity == 0) then -- It's a gray item
 					PickupContainerItem(bag, slot) 
 					DeleteCursorItem() 
-					purgeCount = purgeCount + 1
+					purgeCount = purgeCount + itemCount
+					wastedGoldCount = wastedGoldCount + (itemSellPrice * itemCount)
 				end
 			end 
 		end 
 	end
 	
 	if(purgeCount > 0) then
-		DerpyPrint("Purged "..purgeCount.." |4gray item:gray items; from your bags.")
+		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+	else
+		DerpyPrint("You have no gray items in your bags.")
 	end
 end
 
