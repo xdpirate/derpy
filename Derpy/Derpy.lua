@@ -36,6 +36,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		DerpyPrint("durr") -- derp
 	elseif(msg == "bagworth") then
 		BagWorth()
+	elseif(msg == "useless") then
+		PurgeUselessItems()
 	elseif(msg == "gray" or msg == "grey") then
 		PurgeGrayItems()
 	elseif(msg == "bookclub") then
@@ -58,7 +60,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("GuildDing")
     elseif(msg == "rep") then
 		togglePassive("RepTrack")
-    elseif(msg == "int" or msg == "innervate") then
+    elseif(msg == "ivt" or msg == "innervate") then
 		togglePassive("Innervate")
     elseif(msg == "passive") then
 		ShowPassiveMenu();
@@ -81,6 +83,16 @@ function SendSlash(slashCommandToSend) -- Send a slash command
 	ChatEdit_SendText(ChatFrame1EditBox)
 end
 
+function has_value (tab, val) -- Shamelessly stolen from Stack Overflow
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
+
 function DerpyPrint(msg) -- Print a chat frame message in Derpy format
 	print(color.."[Derpy]"..original.." "..msg)
 end
@@ -94,6 +106,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint("Available commands:")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
+	DerpyPrint(highlight("useless").." -- Purge useless items from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
@@ -247,29 +260,28 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				
 				if restedXP == nil then restedXP = 0 end
 				if(UnitLevel("player") < CurrentLevelCap) then
-					DerpyPrint("You are no longer resting ("..restedXP.." rested XP)")
+					DerpyPrint("You are no longer resting ("..restedXP.." rested XP).")
 				else
-					DerpyPrint("You are no longer resting")
+					DerpyPrint("You are no longer resting.")
 				end
 			end
 		end
 		
 	elseif(event=="ACHIEVEMENT_EARNED") then -- Party Achievement function
 		if(PartyAchievementState~="OFF") then
+			partyAchivementLink = GetAchievementLink(arg1)
+
 			if(GetNumPartyMembers() > 0) then
-				partyAchivementLink = GetAchievementLink(arg1)
-				SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "PARTY", nil)
-				
-				if(GetNumRaidMembers() > 0) then
-					SendChatMessage("[Derpy] "..UnitName("player").." earned the achievement "..partyAchivementLink.."!", "RAID", nil)
-				end
+				SendChatMessage(UnitName("player").." earned the achievement "..partyAchivementLink.."!", "PARTY", nil)
+			elseif(GetNumRaidMembers() > 0) then
+				SendChatMessage(UnitName("player").." earned the achievement "..partyAchivementLink.."!", "RAID", nil)
 			end
 		end
 		
 	elseif(event=="PLAYER_LEVEL_UP") then -- Guild Ding function
 		if(GuildDingState~="OFF") then
 			if(IsInGuild()==1) then
-				SendChatMessage("[Derpy] Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil)
+				SendChatMessage("Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil)
 			end
 		end
 		
@@ -335,6 +347,43 @@ function PurgeGrayItems() -- Delete all gray items from bags
 	end
 end
 
+function PurgeUselessItems()
+	uselessItems = { 
+		"A Guide to Northern Cloth Scavenging",
+		"Manual: Heavy Frostweave Bandage"
+	}
+	purgeCount = 0
+	
+	for bag=0,4 
+	do 
+		for slot = 1,GetContainerNumSlots(bag) 
+		do 
+			link = GetContainerItemLink(bag, slot)
+			_, itemCount = GetContainerItemInfo(bag, slot)
+			
+			if link then
+				itemInfo = {GetItemInfo(link)}
+				itemName = select(1, unpack(itemInfo))
+				rarity = select(3, unpack(itemInfo))
+				itemSellPrice = select(11, unpack(itemInfo))
+				
+				if(has_value(uselessItems, itemName)) then -- It's a useless item
+					DerpyPrint("Purging "..link)
+					PickupContainerItem(bag, slot) 
+					DeleteCursorItem() 
+					purgeCount = purgeCount + itemCount
+				end
+			end 
+		end 
+	end
+	
+	if(purgeCount > 0) then
+		DerpyPrint("Purged "..purgeCount.." |4useless item:useless items; from your bag.")
+	else
+		DerpyPrint("You have no \"useless\" items in your bags.")
+	end
+end
+
 function BagWorth() -- Not a reappropriation of PurgeGrayItems() at all, no sir, not on my watch
 	totalItemCount = 0
 	runningGoldCount = 0
@@ -364,7 +413,7 @@ end
 function DisbandRaid() -- Remove all raid members
 	numRaidMems = GetNumRaidMembers()
 	if(numRaidMems > 1 and numRaidMems ~= nil) then
-		SendChatMessage("[Derpy] Raid disbanding!","RAID",nil);
+		SendChatMessage("Raid disbanding!","RAID",nil);
 		for i = 1, GetNumRaidMembers() do 
 			if("raid"..i~="player") then 
 				UninviteUnit("raid"..i)
