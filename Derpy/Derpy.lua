@@ -316,6 +316,7 @@ end
 
 function PurgeGrayItems() -- Delete all gray items from bags
 	purgeCount = 0
+	slotCount = 0
 	wastedGoldCount = 0
 	
 	for bag=0,4 
@@ -334,6 +335,7 @@ function PurgeGrayItems() -- Delete all gray items from bags
 					PickupContainerItem(bag, slot) 
 					DeleteCursorItem() 
 					purgeCount = purgeCount + itemCount
+					slotCount = slotCount + 1
 					wastedGoldCount = wastedGoldCount + (itemSellPrice * itemCount)
 				end
 			end 
@@ -341,7 +343,7 @@ function PurgeGrayItems() -- Delete all gray items from bags
 	end
 	
 	if(purgeCount > 0) then
-		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags . If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
 	else
 		DerpyPrint("You have no gray items in your bags.")
 	end
