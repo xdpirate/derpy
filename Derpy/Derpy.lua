@@ -13,7 +13,6 @@ repTrackLastTimestamp = time()
 lastInnervateMessageTime = nil
 
 innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
-dirgeLink = "\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r"
 
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy'
@@ -34,6 +33,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 	
 	if(msg == "hurr") then
 		DerpyPrint("durr") -- derp
+	elseif(msg == "tf") then
+		DerpyPrint("\124cffff8000\124Hitem:19019:0:0:0:0:0:0:0:0\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
 	elseif(msg == "bagworth") then
 		BagWorth()
 	elseif(msg == "useless") then
@@ -47,7 +48,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
     elseif(msg == "spet") then
 		RandomPet(1)
     elseif(msg == "shitstorm") then
-		InitiateShitstorm()
+		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
 	elseif(msg == "partyachi") then
 		togglePassive("PartyAchievement")
 	elseif(msg == "rested") then
@@ -67,7 +68,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
     elseif(msg == "dr" or msg == "disband") then
 		DisbandRaid()
     elseif(msg == "speed") then
-		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%");
+		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%")
     elseif(msg == "about") then
         DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
 	elseif(msg == "" or msg == nil) then
@@ -494,10 +495,6 @@ function RandomPet(silent) -- Summon a random pet with or without funky dialogue
 		-- ... just summon that fucker
 		CallCompanion("CRITTER", petId);
 	end
-end
-
-function InitiateShitstorm() -- Initiate a shitstorm by giving you a link to [Dirge].
-	DerpyPrint("Here's your shitstorm link: "..dirgeLink..". Enjoy!")
 end
 
 function HigherLearningWaypoints() -- Set up Higher Learning waypoints on map
