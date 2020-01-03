@@ -4,6 +4,7 @@ A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich 
 
 ## Passive/automatic functions
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
+- **RepAnnounce** -- Shows you a notification and plays a non-intrusive sound whenever your standing with a faction changes
 - **Innervate Notifier** -- Sends a whisper to the receiving target when you cast Innervate on them
 - **Rested Notifier** -- Notifies you when entering or leaving a resting area, showing how much rested XP you've accumulated, if any
 - **Party Achievement Notifier** -- Posts a notification about your gained achievements to the party chat, for grouping with guild outsiders
@@ -15,6 +16,7 @@ All of the passive functions can be toggled in-game.
 
 ## Activated functions
 - **Gray** -- Purge all gray items from your bags
+- **LowGray** -- Purge the lowest value gray item slot from your bags
 - **Useless** -- Purge useless items from your bags (Currently [A Guide to Northern Cloth Scavenging] and [Manual: Heavy Frostweave Bandage], as these are items that drop regardless if you know them or don't have the proficiency to learn them
 - **Bag Worth** -- Show the total worth of the items in your bags
 - **Raid Disband** -- Completely disband a raid group you are the leader of
@@ -24,7 +26,7 @@ All of the passive functions can be toggled in-game.
 - **Speed** -- Calculates and outputs your current speed. Useful for finding out which speed buffs/effects stack and what the resulting speed is
 
 ## How to install
-Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and copy the "Derpy" folder into WoW Install Folder\Interface\AddOns.
+Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and move the "Derpy" folder into WoW Install Folder\Interface\AddOns.
 
 ## How to use
 **/derp** or **/derpy**

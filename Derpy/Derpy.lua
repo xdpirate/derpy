@@ -14,6 +14,17 @@ lastInnervateMessageTime = nil
 
 innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
+factionStandingColors = {
+	["Hated"] = "cc2222",
+	["Hostile"] = "ff0000",
+	["Unfriendly"] = "ee6622",
+	["Neutral"] = "ffff00",
+	["Friendly"] = "bfff00",
+	["Honored"] = "00ff88",
+	["Revered"] = "00ffcc",
+	["Exalted"] = "00ffff"
+}
+
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy'
 	DerpyPrint("v2.0 loaded (/derp or /derpy)")
@@ -25,7 +36,28 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE") -- For Monster Emote function
 	DerpyFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED") -- ZOOOOOOOOOOM
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
+	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate function
+	
+	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
+	DerpyRepFrame:Hide()
+	DerpyRepFrame:ClearAllPoints()
+	DerpyRepFrame:SetPoint("TOP", UIParent, "CENTER", 0, 300)
+	DerpyRepFrame:SetWidth(350)
+	DerpyRepFrame:SetHeight(80)
+	DerpyRepFrame:SetFrameStrata("DIALOG")
+	DerpyRepFrame:SetBackdrop({
+		  bgFile = [[Interface\GLUES\MODELS\UI_NightElf\aa_NE_sky]], 
+		  edgeFile = [[Interface\DialogFrame\UI-DialogBox-Gold-Border]], 
+		  tile = 0,
+		  edgeSize = 16,
+		  insets = { left = 4, right = 4, top = 4, bottom = 4 }
+	})
+
+	DerpyRepFrame.text = DerpyRepFrame:CreateFontString(nil, "ARTWORK")
+	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
+	DerpyRepFrame.text:SetTextColor(1, 1, 1)
+	DerpyRepFrame.text:SetAllPoints()
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -39,6 +71,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		BagWorth()
 	elseif(msg == "useless") then
 		PurgeUselessItems()
+	elseif(msg == "lowgray" or msg == "lowgrey") then
+		PurgeLowestValueGray()
 	elseif(msg == "gray" or msg == "grey") then
 		PurgeGrayItems()
 	elseif(msg == "bookclub") then
@@ -59,6 +93,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("MageShield")
 	elseif(msg == "gding") then
 		togglePassive("GuildDing")
+    elseif(msg == "repa") then
+		togglePassive("RepAnnounce")
     elseif(msg == "rep") then
 		togglePassive("RepTrack")
     elseif(msg == "ivt" or msg == "innervate") then
@@ -107,6 +143,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint("Available commands:")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
+	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
 	DerpyPrint(highlight("useless").." -- Purge useless items from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
@@ -126,6 +163,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
 	DerpyPrint(highlight("mshield").." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..highlight(MageShieldState)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
+	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast "..innervateLink.." on (Currently "..highlight(InnervateState)..")")
 end
 
@@ -137,6 +175,13 @@ function togglePassive(which) -- Toggle passive functions on/off
 			RepTrackState = "ON"
 		end
 		DerpyPrint("RepTrack is now "..RepTrackState..".")
+	elseif(which=="RepAnnounce") then
+		if(RepAnnounceState == "ON") then
+			RepAnnounceState = "OFF"
+		else
+			RepAnnounceState = "ON"
+		end
+		DerpyPrint("RepAnnounce is now "..RepAnnounceState..".")
 	elseif(which=="Innervate") then
 		if(InnervateState == "ON") then
 			InnervateState = "OFF"
@@ -183,7 +228,7 @@ function togglePassive(which) -- Toggle passive functions on/off
 end
 
 function Derpy_OnEvent(self, event, ...) -- Event handler
-	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 = ...;
+	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
 	if(event=="VARIABLES_LOADED") then
 		CombatTextSetActiveUnit("player") -- For RepTrack to work
 		
@@ -204,6 +249,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		end
 		if RepTrackState == nil then
 			RepTrackState = "ON" -- Defaults to on, because it's useful
+		end
+		if RepTrackState == nil then
+			RepAnnounceState = "ON" -- Defaults to on, because it's useful
 		end
 		if InnervateState == nil then
 			InnervateState = "ON" -- Defaults to on, because it's useful
@@ -285,7 +333,23 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				SendChatMessage("Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil)
 			end
 		end
-		
+	elseif(event=="CHAT_MSG_SYSTEM") then -- RepAnnounce
+		currentChatMessage = arg1
+		newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
+		if(newLevel ~= nil) then
+			DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
+			UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
+			PlaySound(10043)
+			
+			local t = 5
+			DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
+				 t = t - elapsed
+				 if t <= 0 then
+					DerpyRepFrame:SetScript("OnUpdate", nil)
+					UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
+				 end
+			end)
+		end
 	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack - Automatically change watched faction when you gain rep
 		if(RepTrackState~="OFF") then
 			if(arg1=="FACTION") then
@@ -313,6 +377,49 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 	end
+end
+
+function PurgeLowestValueGray()
+	grayCount = 0
+	lowValGold = 99999999
+	lowValBag = nil
+	lowValSlot = nil
+	lowValCount = nil
+	
+	for bag=0,4 
+	do 
+		for slot = 1,GetContainerNumSlots(bag) 
+		do 
+			link = GetContainerItemLink(bag, slot)
+			_, itemCount = GetContainerItemInfo(bag, slot)
+			
+			if link then
+				itemInfo = {GetItemInfo(link)}
+				rarity = select(3, unpack(itemInfo))
+				itemSellPrice = select(11, unpack(itemInfo))
+				
+				if (rarity == 0) then -- It's a gray item
+					grayCount = grayCount + 1
+					if itemSellPrice * itemCount < lowValGold then
+						lowValGold = itemSellPrice * itemCount
+						lowValBag = bag
+						lowValSlot = slot
+						lowValCount = itemCount
+					end
+				end
+			end 
+		end 
+	end
+	
+	if grayCount > 0 then
+		purgeLink = GetContainerItemLink(lowValBag, lowValSlot)
+		DerpyPrint("Purged lowest value gray item slot in your bag:")
+		DerpyPrint(purgeLink.." x"..lowValCount.." - Total value "..GetCoinTextureString(lowValGold))
+		PickupContainerItem(lowValBag, lowValSlot) 
+		DeleteCursorItem() 
+	else
+		DerpyPrint("There are no gray items in your bags.")
+	end 
 end
 
 function PurgeGrayItems() -- Delete all gray items from bags
