@@ -61,53 +61,53 @@ function Derpy_OnLoad() -- Addon loaded
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
-	local msg = strlower(msg)
+	local message = strlower(msg)
 	
-	if(msg == "hurr") then
+	if(message == "hurr") then
 		DerpyPrint("durr") -- derp
-	elseif(msg == "tf") then
+	elseif(message == "tf") then
 		DerpyPrint("\124cffff8000\124Hitem:19019:0:0:0:0:0:0:0:0\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
-	elseif(msg == "bagworth") then
+	elseif(message == "bagworth") then
 		BagWorth()
-	elseif(msg == "useless") then
+	elseif(message == "useless") then
 		PurgeUselessItems()
-	elseif(msg == "lowgray" or msg == "lowgrey") then
+	elseif(message == "lowgray" or message == "lowgrey") then
 		PurgeLowestValueGray()
-	elseif(msg == "gray" or msg == "grey") then
+	elseif(message == "gray" or message == "grey") then
 		PurgeGrayItems()
-	elseif(msg == "bookclub") then
+	elseif(message == "bookclub") then
 		HigherLearningWaypoints()
-    elseif(msg == "pet") then
+    elseif(message == "pet") then
 		RandomPet(0)
-    elseif(msg == "spet") then
+    elseif(message == "spet") then
 		RandomPet(1)
-    elseif(msg == "shitstorm") then
+    elseif(message == "shitstorm") then
 		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
-	elseif(msg == "partyachi") then
+	elseif(message == "partyachi") then
 		togglePassive("PartyAchievement")
-	elseif(msg == "rested") then
+	elseif(message == "rested") then
 		togglePassive("FullyRested")
-	elseif(msg == "monster") then
+	elseif(message == "monster") then
 		togglePassive("MonsterEmote")
-	elseif(msg == "mshield") then
+	elseif(message == "mshield") then
 		togglePassive("MageShield")
-	elseif(msg == "gding") then
+	elseif(message == "gding") then
 		togglePassive("GuildDing")
-    elseif(msg == "repa") then
+    elseif(message == "repa") then
 		togglePassive("RepAnnounce")
-    elseif(msg == "rep") then
+    elseif(message == "rep") then
 		togglePassive("RepTrack")
-    elseif(msg == "ivt" or msg == "innervate") then
+    elseif(message == "ivt" or message == "innervate") then
 		togglePassive("Innervate")
-    elseif(msg == "passive") then
+    elseif(message == "passive") then
 		ShowPassiveMenu();
-    elseif(msg == "dr" or msg == "disband") then
+    elseif(message == "dr" or message == "disband") then
 		DisbandRaid()
-    elseif(msg == "speed") then
+    elseif(message == "speed") then
 		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%")
-    elseif(msg == "about") then
+    elseif(message == "about") then
         DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
-	elseif(msg == "" or msg == nil) then
+	elseif(message == "" or message == nil) then
 		ShowUsage()
 	else
 		ShowUsage()
@@ -252,7 +252,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if RepTrackState == nil then
 			RepTrackState = "ON" -- Defaults to on, because it's useful
 		end
-		if RepTrackState == nil then
+		if RepAnnounceState == nil then
 			RepAnnounceState = "ON" -- Defaults to on, because it's useful
 		end
 		if InnervateState == nil then
