@@ -61,7 +61,7 @@ function Derpy_OnLoad() -- Addon loaded
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
-	msg = strlower(msg)
+	local msg = strlower(msg)
 	
 	if(msg == "hurr") then
 		DerpyPrint("durr") -- derp
@@ -135,7 +135,9 @@ function DerpyPrint(msg) -- Print a chat frame message in Derpy format
 end
 
 function highlight(msg) -- Highlight a piece of text
-	return highlightColor..msg..original
+	if(msg~=nil) then
+		return highlightColor..msg..original
+	end
 end
 
 function ShowUsage() -- Show available functions
