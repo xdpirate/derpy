@@ -5,7 +5,7 @@
 -- You are free to redistribute and modify this addon, as long 
 -- as you give proper credit to me, the original author.
 
-color = "|cFF66EE66" -- We like green
+local color = "|cFF66EE66" -- We like green
 highlightColor = "|cFF9BFF00"
 original = "|r"
 CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
