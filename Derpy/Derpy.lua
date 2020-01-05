@@ -25,6 +25,11 @@ factionStandingColors = {
 	["Exalted"] = "00ffff"
 }
 
+local function starts_with(str, start)
+   return str:sub(1, #start) == start
+end
+
+
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy'
 	DerpyPrint("v2.0 loaded (/derp or /derpy)")
@@ -337,20 +342,23 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		end
 	elseif(event=="CHAT_MSG_SYSTEM") then -- RepAnnounce
 		currentChatMessage = arg1
-		newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
-		if(newLevel ~= nil) then
-			DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
-			UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
-			PlaySound(10043)
-			
-			local t = 5
-			DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
-				 t = t - elapsed
-				 if t <= 0 then
-					DerpyRepFrame:SetScript("OnUpdate", nil)
-					UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
-				 end
-			end)
+		
+		if(starts_with(currentChatMessage, "You are now ")) then
+			newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
+			if(newLevel ~= nil) then
+				DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
+				UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
+				PlaySound(10043)
+				
+				local t = 5
+				DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
+					 t = t - elapsed
+					 if t <= 0 then
+						DerpyRepFrame:SetScript("OnUpdate", nil)
+						UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
+					 end
+				end)
+			end
 		end
 	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack - Automatically change watched faction when you gain rep
 		if(RepTrackState~="OFF") then
