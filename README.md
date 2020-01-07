@@ -29,7 +29,7 @@ All of the passive functions can be toggled in-game.
 Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and move the "Derpy" folder into WoW Install Folder\Interface\AddOns.
 
 ## How to use
-**/derp** or **/derpy**
+**/derp**, **/derpy** or **/dr**
 
 ## Misc
 Bug reports, pull requests, and feature requests are welcome!
