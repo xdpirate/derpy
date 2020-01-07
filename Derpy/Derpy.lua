@@ -6,13 +6,13 @@
 -- as you give proper credit to me, the original author.
 
 local color = "|cFF66EE66" -- We like green
-highlightColor = "|cFF9BFF00"
-original = "|r"
-CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
-repTrackLastTimestamp = time()
-lastInnervateMessageTime = nil
+local highlightColor = "|cFF9BFF00"
+local original = "|r"
+local CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
+local repTrackLastTimestamp = time()
+local lastInnervateMessageTime = nil
 
-innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
+local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
 factionStandingColors = {
 	["Hated"] = "cc2222",
@@ -31,8 +31,8 @@ end
 
 
 function Derpy_OnLoad() -- Addon loaded
-	SLASH_DERPY1, SLASH_DERPY2 = '/derp', '/derpy'
-	DerpyPrint("v2.0 loaded (/derp or /derpy)")
+	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
+	DerpyPrint("v2.0 loaded (/derpy, /derp, /dr)")
 	
 	DerpyFrame:RegisterEvent("VARIABLES_LOADED") -- So we can detect user preferences
 	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
@@ -43,6 +43,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate function
+	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge function
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -66,16 +67,16 @@ function Derpy_OnLoad() -- Addon loaded
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
-	local message = strlower(msg)
+	local message = strlower(msg) -- Easier this way...
 	
 	if(message == "hurr") then
 		DerpyPrint("durr") -- derp
+	elseif(starts_with(message, "autopurge")) then
+		AutoPurgeHandler(message)
 	elseif(message == "tf") then
 		DerpyPrint("\124cffff8000\124Hitem:19019:0:0:0:0:0:0:0:0\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
 	elseif(message == "bagworth") then
 		BagWorth()
-	elseif(message == "useless") then
-		PurgeUselessItems()
 	elseif(message == "lowgray" or message == "lowgrey") then
 		PurgeLowestValueGray()
 	elseif(message == "gray" or message == "grey") then
@@ -112,7 +113,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%")
     elseif(message == "about") then
         DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
-	elseif(message == "" or message == nil) then
+	elseif(message == "" or message == nil or message == " ") then
 		ShowUsage()
 	else
 		ShowUsage()
@@ -135,6 +136,18 @@ function has_value (tab, val) -- Shamelessly stolen from Stack Overflow
     return false
 end
 
+function table_index(whichTable, whichValue)
+	local index={}
+	for k,v in pairs(whichTable) do
+	   index[v]=k
+	end
+	return index[whichValue]
+end
+
+function trim(s)
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 function DerpyPrint(msg) -- Print a chat frame message in Derpy format
 	print(color.."[Derpy]"..original.." "..msg)
 end
@@ -147,11 +160,11 @@ end
 
 function ShowUsage() -- Show available functions
 	DerpyPrint("Usage: "..color.."/derp "..highlight("<command>"))
+	DerpyPrint("(/derp can be substituted for /dr or /derpy)")
 	DerpyPrint("Available commands:")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
-	DerpyPrint(highlight("useless").." -- Purge useless items from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
@@ -163,7 +176,10 @@ function ShowUsage() -- Show available functions
 end
 
 function ShowPassiveMenu() -- List states and descriptions of passive functions
+	DerpyPrint("Usage: "..color.."/derp "..highlight("<command>"))
+	DerpyPrint("(/derp can be substituted for /dr or /derpy)")
 	DerpyPrint("Toggle passive features:"..original)
+	DerpyPrint(highlight("autopurge").." -- (Submenu) Automatically purge specified items (Currently "..highlight(AutoPurgeState)..")")
 	DerpyPrint(highlight("partyachi").." -- Toggle Party Achievement notification (Currently "..highlight(PartyAchievementState)..")")
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
@@ -189,6 +205,20 @@ function togglePassive(which) -- Toggle passive functions on/off
 			RepAnnounceState = "ON"
 		end
 		DerpyPrint("RepAnnounce is now "..RepAnnounceState..".")
+	elseif(which=="AutoPurge") then
+		if(AutoPurgeState == "ON") then
+			AutoPurgeState = "OFF"
+		else
+			AutoPurgeState = "ON"
+		end
+		DerpyPrint("AutoPurge is now "..AutoPurgeState..".")
+	elseif(which=="AutoPurgeVerbose") then
+		if(AutoPurgeVerbose == "ON") then
+			AutoPurgeVerbose = "OFF"
+		else
+			AutoPurgeVerbose = "ON"
+		end
+		DerpyPrint("AutoPurge verbose mode is now "..AutoPurgeVerbose..".")
 	elseif(which=="Innervate") then
 		if(InnervateState == "ON") then
 			InnervateState = "OFF"
@@ -239,6 +269,10 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	if(event=="VARIABLES_LOADED") then
 		CombatTextSetActiveUnit("player") -- For RepTrack to work
 		
+		if(AutoPurgeItems == nil) then -- Initialize the autopurge item list 
+			AutoPurgeItems = {}
+		end
+		
 		if PartyAchievementState == nil then
 			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 		end
@@ -263,6 +297,19 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if InnervateState == nil then
 			InnervateState = "ON" -- Defaults to on, because it's useful
 		end
+		if AutoPurgeState == nil then
+			AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
+		end
+		if AutoPurgeVerbose == nil then
+			AutoPurgeVerbose = "OFF" -- Defaults to off, because it's annoying
+		end
+		
+	elseif(event=="BAG_UPDATE") then -- AutoPurge
+		if(AutoPurgeState~="OFF") then
+			if(InCombatLockdown()==nil) then -- Do nothing in combat to avoid fuckery
+				DoAutoPurge()
+			end
+		end
 		
 	elseif(event=="UNIT_AURA") then -- Innervate notifier
 		if(InnervateState~="OFF") then
@@ -275,6 +322,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end
 			end
 		end
+		
 	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- Mage Shields
 		if(MageShieldState~="OFF") then
 			if(IsAddOnLoaded("DBM-Core") == 1) then
@@ -340,12 +388,13 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				SendChatMessage("Ding! "..UnitName("player").." just reached level "..arg1.."!","GUILD",nil)
 			end
 		end
+	
 	elseif(event=="CHAT_MSG_SYSTEM") then -- RepAnnounce
 		currentChatMessage = arg1
 		
 		if(starts_with(currentChatMessage, "You are now ")) then
 			newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
-			if(newLevel ~= nil) then
+			if(newLevel ~= nil and factionName ~= nil) then
 				DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
 				UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
 				PlaySound(10043)
@@ -360,6 +409,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end)
 			end
 		end
+		
 	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack - Automatically change watched faction when you gain rep
 		if(RepTrackState~="OFF") then
 			if(arg1=="FACTION") then
@@ -385,6 +435,109 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 					end
 				end				
 			end
+		end
+	end
+end
+
+function AutoPurgeHandler(message)
+	local inputString = message
+	
+	if(starts_with(inputString, "autopurge list")) then
+		local itemNo = 0
+		local totalItems = table.getn(AutoPurgeItems)
+		if totalItems > 0 then
+			DerpyPrint("Items currently in the autopurge list for "..UnitName("player")..":")
+			for itemNo=0,totalItems
+			do
+				local currentItem = AutoPurgeItems[itemNo]
+				if(currentItem~=nil) then
+					DerpyPrint(itemNo..": "..currentItem)
+				end
+			end
+		else
+			DerpyPrint("There are currently no items in the autopurge list!")
+		end		
+	elseif(starts_with(inputString, "autopurge add")) then
+		local item = trim(string.sub(inputString, 14))
+		
+		if(item == nil or item == "") then
+			DerpyPrint("Please specify a valid item name.")
+			DerpyPrint("For example: "..highlight("/derp autopurge add stormwind brie"))
+		else
+			if(has_value(AutoPurgeItems, item)) then
+				DerpyPrint("\""..item.."\" is already in the autopurge list!")
+			else
+				table.insert(AutoPurgeItems, item)
+				DerpyPrint("Added \""..item.."\" to the autopurge list!")
+			end
+		end
+	elseif(starts_with(inputString, "autopurge remove")) then
+		local item = trim(string.sub(inputString, 17))
+		
+		if(item == nil or item == "") then
+			DerpyPrint("Please specify a valid item name.")
+			DerpyPrint("For example: "..highlight("/derp autopurge remove sweet nectar"))
+		else
+			if(has_value(AutoPurgeItems, item)) then
+				local itemIndex = table_index(AutoPurgeItems, item)
+				table.remove(AutoPurgeItems, itemIndex)
+				DerpyPrint("Removed \""..item.."\" from the autopurge list!")
+			else
+				DerpyPrint("\""..item.."\" was not found in the autopurge list!")
+			end
+		end
+	elseif(starts_with(inputString, "autopurge clear")) then
+		AutoPurgeItems = {}
+		DerpyPrint("AutoPurge list cleared.")
+	elseif(starts_with(inputString, "autopurge verbose")) then
+		togglePassive("AutoPurgeVerbose")
+	elseif(starts_with(inputString, "autopurge toggle")) then
+		togglePassive("AutoPurge")
+	elseif(starts_with(inputString, "autopurge guide")) then
+		DerpyPrint("IMPORTANT NOTES FOR AUTOPURGE:")
+		DerpyPrint(highlight("*").." It is |cFFFF0000IMPOSSIBLE TO UNDELETE ITEMS|r purged this way! You have been warned!")
+		DerpyPrint(highlight("*").." AutoPurge's on/off state and the autopurge item list are saved on a per-character basis.")
+		DerpyPrint(highlight("*").." Items are added by NAME, not by LINK!")
+		DerpyPrint(highlight("*").." The character case of the item name to be added or removed doesn't matter.")
+		DerpyPrint(highlight("*").." Autopurging will not happen while you are in combat.")
+		DerpyPrint(highlight("*").." If you loot autopurged items in combat, they will be purged the next time your bags are updated.")
+		DerpyPrint("Examples:")
+		DerpyPrint(highlight("/dr autopurge add goldenbark apple").." -- Adds Goldenbark Apple to the autopurge list")
+		DerpyPrint(highlight("/dr autopurge remove tel'abim banana").." -- Removes Tel'Abim Banana from the autopurge list")
+	else
+		DerpyPrint("|cFFFF0000Autopurged items are not recoverable!|r")
+		DerpyPrint("Usage: "..color.."/derp autopurge "..highlight("<command>"))
+		DerpyPrint("(/derp can be substituted for /dr or /derpy)")
+		DerpyPrint("Available commands:")
+		DerpyPrint(highlight("guide").." -- Read this! Show IMPORTANT notes and help for AutoPurge")
+		DerpyPrint(highlight("toggle").." -- Turn AutoPurge on/off (Currently "..highlight(AutoPurgeState)..")")
+		DerpyPrint(highlight("verbose").." -- Toggle verbose mode (Currently "..highlight(AutoPurgeVerbose)..")")
+		DerpyPrint(highlight("list").." -- List items currently being autopurged")
+		DerpyPrint(highlight("add item name").." -- Add the specified item to the autopurge list")
+		DerpyPrint(highlight("remove item name").." -- Remove the specified item from the autopurge list")
+		DerpyPrint(highlight("clear").." -- Remove ALL items from the autopurge list")
+	end
+end
+
+function DoAutoPurge()
+	for bag=0,4 -- Searching all bags instead of only the updated one, in order to catch items collected in combat
+	do
+		for slot = 1,GetContainerNumSlots(bag) 
+		do 
+			link = GetContainerItemLink(bag, slot)
+			
+			if link then
+				local itemName = GetItemInfo(link)
+				itemName = strlower(itemName)
+				
+				if(has_value(AutoPurgeItems, itemName)) then -- It's in the autopurge list
+					PickupContainerItem(bag, slot)
+					DeleteCursorItem()
+					if(AutoPurgeVerbose=="ON") then
+						DerpyPrint("AutoPurge: "..itemName)
+					end
+				end
+			end 
 		end
 	end
 end
@@ -461,46 +614,9 @@ function PurgeGrayItems() -- Delete all gray items from bags
 	end
 	
 	if(purgeCount > 0) then
-		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags . If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
 	else
 		DerpyPrint("You have no gray items in your bags.")
-	end
-end
-
-function PurgeUselessItems()
-	uselessItems = { 
-		"A Guide to Northern Cloth Scavenging",
-		"Manual: Heavy Frostweave Bandage"
-	}
-	purgeCount = 0
-	
-	for bag=0,4 
-	do 
-		for slot = 1,GetContainerNumSlots(bag) 
-		do 
-			link = GetContainerItemLink(bag, slot)
-			_, itemCount = GetContainerItemInfo(bag, slot)
-			
-			if link then
-				itemInfo = {GetItemInfo(link)}
-				itemName = select(1, unpack(itemInfo))
-				rarity = select(3, unpack(itemInfo))
-				itemSellPrice = select(11, unpack(itemInfo))
-				
-				if(has_value(uselessItems, itemName)) then -- It's a useless item
-					DerpyPrint("Purging "..link)
-					PickupContainerItem(bag, slot) 
-					DeleteCursorItem() 
-					purgeCount = purgeCount + itemCount
-				end
-			end 
-		end 
-	end
-	
-	if(purgeCount > 0) then
-		DerpyPrint("Purged "..purgeCount.." |4useless item:useless items; from your bag.")
-	else
-		DerpyPrint("You have no \"useless\" items in your bags.")
 	end
 end
 

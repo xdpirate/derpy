@@ -3,6 +3,7 @@ A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich 
 
 
 ## Passive/automatic functions
+- **AutoPurge** -- Allows you to maintain a list of items to be automatically purged from your bags
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
 - **RepAnnounce** -- Shows you a notification and plays a non-intrusive sound whenever your standing with a faction changes
 - **Innervate Notifier** -- Sends a whisper to the receiving target when you cast Innervate on them
@@ -17,7 +18,6 @@ All of the passive functions can be toggled in-game.
 ## Activated functions
 - **Gray** -- Purge all gray items from your bags
 - **LowGray** -- Purge the lowest value gray item slot from your bags
-- **Useless** -- Purge useless items from your bags (Currently [A Guide to Northern Cloth Scavenging] and [Manual: Heavy Frostweave Bandage], as these are items that drop regardless if you know them or don't have the proficiency to learn them
 - **Bag Worth** -- Show the total worth of the items in your bags
 - **Raid Disband** -- Completely disband a raid group you are the leader of
 - **Book Club** -- Add TomTom waypoints for the Higher Learning achievement in Dalaran

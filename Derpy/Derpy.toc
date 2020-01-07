@@ -1,10 +1,11 @@
 ## Interface: 30300
 ## Title-enGB: Derpy
 ## Author: Moontits/Kugalskap of Dalaran-WoW
-## Version: 2.0
+## Version: 2.1
 ## Notes: Hurr durr herp derp
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, MageShieldState, RepTrackState, RepAnnounceState, InnervateState
+##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose
 Derpy.lua
 Derpy.xml
