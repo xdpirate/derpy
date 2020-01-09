@@ -528,13 +528,16 @@ function DoAutoPurge()
 			
 			if link then
 				local itemName = GetItemInfo(link)
-				itemName = strlower(itemName)
 				
-				if(has_value(AutoPurgeItems, itemName)) then -- It's in the autopurge list
-					PickupContainerItem(bag, slot)
-					DeleteCursorItem()
-					if(AutoPurgeVerbose=="ON") then
-						DerpyPrint("AutoPurge: "..itemName)
+				if itemName ~= nil then
+					itemName = strlower(itemName)
+					
+					if(has_value(AutoPurgeItems, itemName)) then -- It's in the autopurge list
+						PickupContainerItem(bag, slot)
+						DeleteCursorItem()
+						if(AutoPurgeVerbose=="ON") then
+							DerpyPrint("AutoPurge: "..itemName)
+						end
 					end
 				end
 			end 
