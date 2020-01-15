@@ -269,10 +269,13 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	if(event=="VARIABLES_LOADED") then
 		CombatTextSetActiveUnit("player") -- For RepTrack to work
 		
-		if(AutoPurgeItems == nil) then -- Initialize the autopurge item list 
+		if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
 			AutoPurgeItems = {}
 		end
-		
+		if(GlobalAutoPurgeItems == nil) then
+			GlobalAutoPurgeItems = {}
+		end
+
 		if PartyAchievementState == nil then
 			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 		end
@@ -455,8 +458,23 @@ function AutoPurgeHandler(message)
 				end
 			end
 		else
-			DerpyPrint("There are currently no items in the autopurge list!")
+			DerpyPrint("There are currently no items in the autopurge list for "..UnitName("player").."!")
 		end		
+	elseif(starts_with(inputString, "autopurge glist")) then
+		local itemNo = 0
+		local totalItems = table.getn(GlobalAutoPurgeItems)
+		if totalItems > 0 then
+			DerpyPrint("Items currently in the global autopurge list:")
+			for itemNo=0,totalItems
+			do
+				local currentItem = GlobalAutoPurgeItems[itemNo]
+				if(currentItem~=nil) then
+					DerpyPrint(itemNo..": "..currentItem)
+				end
+			end
+		else
+			DerpyPrint("There are currently no items in the global autopurge list!")
+		end	
 	elseif(starts_with(inputString, "autopurge add")) then
 		local item = trim(string.sub(inputString, 14))
 		
@@ -469,6 +487,20 @@ function AutoPurgeHandler(message)
 			else
 				table.insert(AutoPurgeItems, item)
 				DerpyPrint("Added \""..item.."\" to the autopurge list!")
+			end
+		end
+	elseif(starts_with(inputString, "autopurge gadd")) then
+		local item = trim(string.sub(inputString, 15))
+		
+		if(item == nil or item == "") then
+			DerpyPrint("Please specify a valid item name.")
+			DerpyPrint("For example: "..highlight("/derp autopurge gadd stormwind brie"))
+		else
+			if(has_value(GlobalAutoPurgeItems, item)) then
+				DerpyPrint("\""..item.."\" is already in the global autopurge list!")
+			else
+				table.insert(GlobalAutoPurgeItems, item)
+				DerpyPrint("Added \""..item.."\" to the global autopurge list!")
 			end
 		end
 	elseif(starts_with(inputString, "autopurge remove")) then
@@ -486,9 +518,27 @@ function AutoPurgeHandler(message)
 				DerpyPrint("\""..item.."\" was not found in the autopurge list!")
 			end
 		end
+	elseif(starts_with(inputString, "autopurge gremove")) then
+		local item = trim(string.sub(inputString, 18))
+		
+		if(item == nil or item == "") then
+			DerpyPrint("Please specify a valid item name.")
+			DerpyPrint("For example: "..highlight("/derp autopurge gremove sweet nectar"))
+		else
+			if(has_value(GlobalAutoPurgeItems, item)) then
+				local itemIndex = table_index(GlobalAutoPurgeItems, item)
+				table.remove(GlobalAutoPurgeItems, itemIndex)
+				DerpyPrint("Removed \""..item.."\" from the global autopurge list!")
+			else
+				DerpyPrint("\""..item.."\" was not found in the global autopurge list!")
+			end
+		end
 	elseif(starts_with(inputString, "autopurge clear")) then
 		AutoPurgeItems = {}
-		DerpyPrint("AutoPurge list cleared.")
+		DerpyPrint("AutoPurge list for "..UnitName("player").." cleared.")
+	elseif(starts_with(inputString, "autopurge gclear")) then
+		GlobalAutoPurgeItems = {}
+		DerpyPrint("Global AutoPurge list cleared.")
 	elseif(starts_with(inputString, "autopurge verbose")) then
 		togglePassive("AutoPurgeVerbose")
 	elseif(starts_with(inputString, "autopurge toggle")) then
@@ -496,14 +546,15 @@ function AutoPurgeHandler(message)
 	elseif(starts_with(inputString, "autopurge guide")) then
 		DerpyPrint("IMPORTANT NOTES FOR AUTOPURGE:")
 		DerpyPrint(highlight("*").." It is |cFFFF0000IMPOSSIBLE TO UNDELETE ITEMS|r purged this way! You have been warned!")
-		DerpyPrint(highlight("*").." AutoPurge's on/off state and the autopurge item list are saved on a per-character basis.")
+		DerpyPrint(highlight("*").." AutoPurge's on/off state and the regular autopurge item list are saved on a per-character basis.")
+		DerpyPrint(highlight("*").." The global autopurge list applies to all characters on your account.")
 		DerpyPrint(highlight("*").." Items are added by NAME, not by LINK!")
 		DerpyPrint(highlight("*").." The character case of the item name to be added or removed doesn't matter.")
 		DerpyPrint(highlight("*").." Autopurging will not happen while you are in combat.")
 		DerpyPrint(highlight("*").." If you loot autopurged items in combat, they will be purged the next time your bags are updated.")
 		DerpyPrint("Examples:")
 		DerpyPrint(highlight("/dr autopurge add goldenbark apple").." -- Adds Goldenbark Apple to the autopurge list")
-		DerpyPrint(highlight("/dr autopurge remove tel'abim banana").." -- Removes Tel'Abim Banana from the autopurge list")
+		DerpyPrint(highlight("/dr autopurge gremove tel'abim banana").." -- Removes Tel'Abim Banana from the global autopurge list")
 	else
 		DerpyPrint("|cFFFF0000Autopurged items are not recoverable!|r")
 		DerpyPrint("Usage: "..color.."/derp autopurge "..highlight("<command>"))
@@ -516,6 +567,11 @@ function AutoPurgeHandler(message)
 		DerpyPrint(highlight("add item name").." -- Add the specified item to the autopurge list")
 		DerpyPrint(highlight("remove item name").." -- Remove the specified item from the autopurge list")
 		DerpyPrint(highlight("clear").." -- Remove ALL items from the autopurge list")
+		DerpyPrint(highlight("glist").." -- List items currently being globally autopurged")
+		DerpyPrint(highlight("gadd item name").." -- Add the specified item to the global autopurge list")
+		DerpyPrint(highlight("gremove item name").." -- Remove the specified item from the global autopurge list")
+		DerpyPrint(highlight("gclear").." -- Remove ALL items from the global autopurge list")
+		
 	end
 end
 
@@ -524,7 +580,7 @@ function DoAutoPurge()
 	do
 		for slot = 1,GetContainerNumSlots(bag) 
 		do 
-			link = GetContainerItemLink(bag, slot)
+			local link = GetContainerItemLink(bag, slot)
 			
 			if link then
 				local itemName = GetItemInfo(link)
@@ -532,7 +588,13 @@ function DoAutoPurge()
 				if itemName ~= nil then
 					itemName = strlower(itemName)
 					
-					if(has_value(AutoPurgeItems, itemName)) then -- It's in the autopurge list
+					if(has_value(GlobalAutoPurgeItems, itemName)) then -- It's in the global autopurge list
+						PickupContainerItem(bag, slot)
+						DeleteCursorItem()
+						if(AutoPurgeVerbose=="ON") then
+							DerpyPrint("Global AutoPurge: "..itemName)
+						end
+					elseif(has_value(AutoPurgeItems, itemName)) then -- It's in the character specific autopurge list
 						PickupContainerItem(bag, slot)
 						DeleteCursorItem()
 						if(AutoPurgeVerbose=="ON") then

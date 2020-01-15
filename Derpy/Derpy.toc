@@ -5,7 +5,7 @@
 ## Notes: Hurr durr herp derp
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, MageShieldState, RepTrackState, RepAnnounceState, InnervateState
+##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, MageShieldState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems
 ##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose
 Derpy.lua
 Derpy.xml
