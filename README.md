@@ -26,7 +26,7 @@ All of the passive functions can be toggled in-game.
 - **Speed** -- Calculates and outputs your current speed. Useful for finding out which speed buffs/effects stack and what the resulting speed is
 
 ## How to install
-Click the green "Clone or download"-button, then "Download ZIP". Open the archive, and move the "Derpy" folder into WoW Install Folder\Interface\AddOns.
+Click the green "Clone or download"-button, then "Download ZIP". Open the archive, enter the "Derpy-master" folder, and move the folder named "Derpy" into "Your WoW Install Folder\Interface\AddOns".
 
 ## How to use
 **/derp**, **/derpy** or **/dr**
