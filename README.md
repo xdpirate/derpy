@@ -4,6 +4,7 @@ A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich 
 
 ## Passive/automatic functions
 - **AutoPurge** -- Allows you to maintain a list of items to be automatically purged from your bags
+- **CapShard** -- Caps the amount of Soul Shards you carry to a certain number. When this is on, any excess shards are automatically deleted
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
 - **RepAnnounce** -- Shows you a notification and plays a non-intrusive sound whenever your standing with a faction changes
 - **Innervate Notifier** -- Sends a whisper to the receiving target when you cast Innervate on them

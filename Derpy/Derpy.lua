@@ -43,7 +43,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate function
-	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge function
+	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge and CapShard functions
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -67,7 +67,7 @@ function Derpy_OnLoad() -- Addon loaded
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
-	local message = strlower(msg) -- Easier this way...
+	local message = strlower(trim(msg)) -- Easier this way...
 	
 	if(message == "hurr") then
 		DerpyPrint("durr") -- derp
@@ -105,6 +105,22 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("RepTrack")
     elseif(message == "ivt" or message == "innervate") then
 		togglePassive("Innervate")
+    elseif(starts_with(message, "shard")) then
+		if(message == "shard") then
+			togglePassive("CapShard")
+		else
+			local num = tonumber(strmatch(message, "shard (%d+)"))
+			if(num ~= nil) then
+				if(num < 2) then
+					DerpyPrint("The minimum value for CapShard is 2.")
+				elseif(num > 50) then
+					DerpyPrint("The maximum value for CapShard is 50. Consider turning CapShard off ("..highlight("/dr shard")..") if you need more than 50 shards.")
+				else
+					CapShardNum = num
+					DerpyPrint("CapShard will now cap Soul Shards at "..num..".")
+				end
+			end
+		end
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
@@ -184,6 +200,8 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
+	DerpyPrint(highlight("shard").." -- Toggle Soul Shard capping (Currently "..highlight(CapShardState)..")")
+	DerpyPrint(highlight("shard XX").." -- Set Soul Shard capping value (Currently "..highlight(CapShardNum)..")")
 	DerpyPrint(highlight("mshield").." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..highlight(MageShieldState)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
@@ -198,6 +216,13 @@ function togglePassive(which) -- Toggle passive functions on/off
 			RepTrackState = "ON"
 		end
 		DerpyPrint("RepTrack is now "..RepTrackState..".")
+	elseif(which=="CapShard") then
+		if(CapShardState == "ON") then
+			CapShardState = "OFF"
+		else
+			CapShardState = "ON"
+		end
+		DerpyPrint("CapShard is now "..CapShardState..".")
 	elseif(which=="RepAnnounce") then
 		if(RepAnnounceState == "ON") then
 			RepAnnounceState = "OFF"
@@ -275,7 +300,12 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if(GlobalAutoPurgeItems == nil) then
 			GlobalAutoPurgeItems = {}
 		end
-
+		if CapShardState == nil then
+			CapShardState = "OFF" -- Defaults to off
+		end
+		if CapShardNum == nil then
+			CapShardNum = 15 -- Defaults to 15, because who ever needs more than 15 soul shards?
+		end
 		if PartyAchievementState == nil then
 			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 		end
@@ -314,6 +344,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 		
+		if(CapShardState~="OFF") then
+			CapShards(CapShardNum)
+		end
 	elseif(event=="UNIT_AURA") then -- Innervate notifier
 		if(InnervateState~="OFF") then
 			receivingUnit = arg1
@@ -437,6 +470,25 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 						end
 					end
 				end				
+			end
+		end
+	end
+end
+
+function CapShards(num) -- Shamelessly stolen from the internets, just like everything else in this addon lmaoooo
+	local i = "Soul Shard"
+	local d = GetItemCount(i) - num
+	for x=0,4
+	do
+		for y=1,GetContainerNumSlots(x)
+		do
+			if (d > 0) then
+				local l = GetContainerItemLink(x,y)
+				if l and GetItemInfo(l) == i then
+					PickupContainerItem(x,y)
+					DeleteCursorItem()
+					d = d - 1
+				end
 			end
 		end
 	end

@@ -6,6 +6,6 @@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, MageShieldState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems
-##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose
+##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose, CapShardState, CapShardNum
 Derpy.lua
 Derpy.xml
