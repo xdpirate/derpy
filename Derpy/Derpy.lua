@@ -113,8 +113,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 			if(num ~= nil) then
 				if(num < 2) then
 					DerpyPrint("The minimum value for CapShard is 2.")
-				elseif(num > 50) then
-					DerpyPrint("The maximum value for CapShard is 50. Consider turning CapShard off ("..highlight("/dr shard")..") if you need more than 50 shards.")
+				elseif(num > 31) then
+					DerpyPrint("The maximum value for CapShard is 31, as you cannot carry more than 32 shards at any one time.")
 				else
 					CapShardNum = num
 					DerpyPrint("CapShard will now cap Soul Shards at "..num..".")
