@@ -8,6 +8,7 @@ A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich 
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
 - **RepAnnounce** -- Shows you a notification and plays a non-intrusive sound whenever your standing with a faction changes
 - **Innervate Notifier** -- Sends a whisper to the receiving target when you cast Innervate on them
+- **SpiderBurrito** -- Notifies nearby players when you are afflicted by Web Wrap
 - **Rested Notifier** -- Notifies you when entering or leaving a resting area, showing how much rested XP you've accumulated, if any
 - **Party Achievement Notifier** -- Posts a notification about your gained achievements to the party chat, for grouping with guild outsiders
 - **Guild Ding Notifier** -- Lets your guild know when you level up!

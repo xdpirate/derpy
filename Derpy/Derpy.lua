@@ -11,6 +11,7 @@ local original = "|r"
 local CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
 local repTrackLastTimestamp = time()
 local lastInnervateMessageTime = nil
+local lastWebWrapMessageTime = nil
 
 local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
@@ -42,7 +43,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED") -- ZOOOOOOOOOOM
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
-	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate function
+	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate and SpiderBurrito function
 	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge and CapShard functions
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
@@ -64,6 +65,19 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	DerpyRepFrame.text:SetTextColor(1, 1, 1)
 	DerpyRepFrame.text:SetAllPoints()
+	
+	StaticPopupDialogs["ConfirmDeleteAllGrayItems"] = {
+		text = "Are you sure you want to purge all gray items in your bags? This cannot be undone.",
+		button1 = "Yes",
+		button2 = "No",
+		OnAccept = function()
+		  PurgeGrayItems()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3
+	}
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -80,7 +94,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 	elseif(message == "lowgray" or message == "lowgrey") then
 		PurgeLowestValueGray()
 	elseif(message == "gray" or message == "grey") then
-		PurgeGrayItems()
+		StaticPopup_Show("ConfirmDeleteAllGrayItems")
 	elseif(message == "bookclub") then
 		HigherLearningWaypoints()
     elseif(message == "pet") then
@@ -105,6 +119,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("RepTrack")
     elseif(message == "ivt" or message == "innervate") then
 		togglePassive("Innervate")
+    elseif(message == "sb" or message == "spiderburrito") then
+		togglePassive("SpiderBurrito")
     elseif(starts_with(message, "shard")) then
 		if(message == "shard") then
 			togglePassive("CapShard")
@@ -206,6 +222,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast "..innervateLink.." on (Currently "..highlight(InnervateState)..")")
+	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are Web Wrapped (Currently "..highlight(SpiderBurritoState)..")")
 end
 
 function togglePassive(which) -- Toggle passive functions on/off
@@ -251,6 +268,13 @@ function togglePassive(which) -- Toggle passive functions on/off
 			InnervateState = "ON"
 		end
 		DerpyPrint("Innervate whispers are now "..InnervateState..".")
+	elseif(which=="SpiderBurrito") then
+		if(SpiderBurritoState == "ON") then
+			SpiderBurritoState = "OFF"
+		else
+			SpiderBurritoState = "ON"
+		end
+		DerpyPrint("SpiderBurrito is now "..SpiderBurritoState..".")
 	elseif(which=="MageShield") then
 		if(MageShieldState == "ON") then
 			MageShieldState = "OFF"
@@ -330,6 +354,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if InnervateState == nil then
 			InnervateState = "ON" -- Defaults to on, because it's useful
 		end
+		if SpiderBurritoState == nil then
+			SpiderBurritoState = "ON" -- Defaults to on, because it's useful
+		end
 		if AutoPurgeState == nil then
 			AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
 		end
@@ -348,13 +375,26 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			CapShards(CapShardNum)
 		end
 	elseif(event=="UNIT_AURA") then -- Innervate notifier
+		receivingUnit = arg1
+
 		if(InnervateState~="OFF") then
-			receivingUnit = arg1
 			_, _, _, _, _, _, _, unitCaster = UnitAura(receivingUnit, "Innervate")
 			if(unitCaster ~= nil and receivingUnit ~= nil and unitCaster == "player" and receivingUnit ~= unitCaster and UnitName(unitCaster) ~= UnitName(receivingUnit)) then
 				if(lastInnervateMessageTime == nil or time() - lastInnervateMessageTime > 10) then
 					lastInnervateMessageTime = time()
 					SendChatMessage("\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on you!", "WHISPER", nil, GetUnitName(receivingUnit))
+				end
+			end
+		end
+
+		
+		-- Spider burrito notifier
+		if(SpiderBurritoState~="OFF") then
+			local name = UnitDebuff(receivingUnit, "Web Wrap") 
+			if(name ~= nil and receivingUnit == "player") then
+				if(lastWebWrapMessageTime == nil or time() - lastWebWrapMessageTime > 10) then
+					lastWebWrapMessageTime = time()
+					SendChatMessage("I am a spider burrito! Help me!", "SAY")
 				end
 			end
 		end
