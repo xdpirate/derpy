@@ -109,6 +109,19 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("FullyRested")
 	elseif(message == "monster") then
 		togglePassive("MonsterEmote")
+	elseif(message == "pony") then
+		name, _, _, _, _, _, _, unitCaster = UnitBuff("player", "Crusader Aura")
+		if(name~=nil and unitCaster~=nil) then
+			if(GetNumRaidMembers() > 0) then
+				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "RAID")
+			elseif(GetNumPartyMembers() > 0) then
+				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "PARTY")
+			else
+				DerpyPrint(UnitName(unitCaster) .. " has Crusader Aura on.")
+			end
+		else
+			DerpyPrint("Couldn't find Crusader Aura.")
+		end
 	elseif(message == "mshield") then
 		togglePassive("MageShield")
 	elseif(message == "gding") then

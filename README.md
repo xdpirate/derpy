@@ -21,6 +21,7 @@ All of the passive functions can be toggled in-game.
 - **Gray** -- Purge all gray items from your bags
 - **LowGray** -- Purge the lowest value gray item slot from your bags
 - **Bag Worth** -- Show the total worth of the items in your bags
+- **Pony** -- Squeal in raid/party chat about who has got their Crusader Aura on
 - **Raid Disband** -- Completely disband a raid group you are the leader of
 - **Book Club** -- Add TomTom waypoints for the Higher Learning achievement in Dalaran
 - **Random Pet** -- Summon a random pet companion with some snazzy random dialogue to go with it
