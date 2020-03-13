@@ -33,7 +33,30 @@ Click the green "Clone or download"-button, then "Download ZIP". Open the archiv
 ## How to use
 **/derp**, **/derpy** or **/dr**
 
+## Screenshots
+
+### Main menu
+![Main menu][mainMenu]
+
+### Passive menu
+![Passive menu][passiveMenu]
+
+### AutoPurge menu
+![AutoPurge menu][autoPurgeMenu]
+
+### AutoPurge list example
+![AutoPurge list example][autoPurgeList]
+
+### RepAnnounce popup window
+![RepAnnounce popup window][repAnnounce]
+
 ## Misc
 Bug reports, pull requests, and feature requests are welcome!
 
 In my defense, the slogans for the random pet functions are from 2011, when I originally made this addon, and in dire need of updates (and chemotherapy).
+
+[mainMenu]: https://i.imgur.com/syKYJ1Z.png "Main menu"
+[passiveMenu]: https://i.imgur.com/3JCYVEt.png "Passive menu"
+[autoPurgeMenu]: https://i.imgur.com/WRJdGAp.png "AutoPurge menu"
+[autoPurgeList]: https://i.imgur.com/jgysPOi.png "AutoPurge list example"
+[repAnnounce]: https://i.imgur.com/x4T8b8t.jpg "RepAnnounce popup window"
