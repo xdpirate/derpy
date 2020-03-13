@@ -109,19 +109,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("FullyRested")
 	elseif(message == "monster") then
 		togglePassive("MonsterEmote")
-	elseif(message == "pony") then
-		name, _, _, _, _, _, _, unitCaster = UnitBuff("player", "Crusader Aura")
-		if(name~=nil and unitCaster~=nil) then
-			if(GetNumRaidMembers() > 0) then
-				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "RAID")
-			elseif(GetNumPartyMembers() > 0) then
-				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "PARTY")
-			else
-				DerpyPrint(UnitName(unitCaster) .. " has Crusader Aura on.")
-			end
-		else
-			DerpyPrint("Couldn't find Crusader Aura.")
-		end
+	elseif(starts_with(message, "pony")) then
+		PonyTime(message)
 	elseif(message == "mshield") then
 		togglePassive("MageShield")
 	elseif(message == "gding") then
@@ -211,7 +200,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
-	DerpyPrint(highlight("pony").." -- Say in raid/party chat who has Crusader Aura enabled")
+	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has Crusader Aura enabled")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
@@ -545,6 +534,31 @@ function CapShards(num) -- Shamelessly stolen from the internets, just like ever
 				end
 			end
 		end
+	end
+end
+
+function PonyTime(msg)
+	name, _, _, _, _, _, _, unitCaster = UnitBuff("player", "Crusader Aura")
+	if(name~=nil and unitCaster~=nil) then
+		if(msg == "pony") then
+			DerpyPrint(UnitName(unitCaster) .. " has Crusader Aura on!")
+		elseif(msg == "pony raid") then
+			if(GetNumRaidMembers() > 0) then
+				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "RAID")
+			else
+				DerpyPrint("You must be in a raid group to use Pony Raid.")
+			end
+		elseif(msg == "pony party") then
+			if(GetNumPartyMembers() > 0) then
+				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "PARTY")
+			else
+				DerpyPrint("You must be in a party to use Pony Party.")
+			end
+		else
+			DerpyPrint("Valid options for Pony are \"pony\", \"pony raid\", or \"pony party\"")
+		end
+	else
+		DerpyPrint("Couldn't find any Crusader Aura.")
 	end
 end
 
