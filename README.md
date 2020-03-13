@@ -13,7 +13,6 @@ A collection of more or less useful functions for WoW 3.3.5a (Wrath of the Lich 
 - **Party Achievement Notifier** -- Posts a notification about your gained achievements to the party chat, for grouping with guild outsiders
 - **Guild Ding Notifier** -- Lets your guild know when you level up!
 - **Monster Emote** -- Emphasizes monster emotes such as "Murloc runs away in fear!", by shoving them in your face (displays them in the top error frame)
-- **Mage Shields** -- Shows on-screen timers for your Ice Barrier and Mage Shield cooldowns. Supports Glyph of Mana Shield. (Requires Deadly Boss Mods)
 
 All of the passive functions can be toggled in-game.
 

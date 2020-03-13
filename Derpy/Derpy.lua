@@ -40,7 +40,6 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP") -- For Guild Ding function
 	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING") -- For Rested function
 	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE") -- For Monster Emote function
-	DerpyFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED") -- ZOOOOOOOOOOM
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate and SpiderBurrito function
@@ -111,8 +110,6 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("MonsterEmote")
 	elseif(starts_with(message, "pony")) then
 		PonyTime(message)
-	elseif(message == "mshield") then
-		togglePassive("MageShield")
 	elseif(message == "gding") then
 		togglePassive("GuildDing")
     elseif(message == "repa") then
@@ -200,7 +197,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
-	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has Crusader Aura enabled")
+	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has \124cff71d5ff\124Hspell:32223\124h[Crusader Aura]\124h\124r enabled")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
@@ -219,13 +216,12 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
-	DerpyPrint(highlight("shard").." -- Toggle Soul Shard capping (Currently "..highlight(CapShardState)..")")
-	DerpyPrint(highlight("shard XX").." -- Set Soul Shard capping value (Currently "..highlight(CapShardNum)..")")
-	DerpyPrint(highlight("mshield").." -- Toggle Mage Shield timers (Req. Deadly Boss Mods) (Currently "..highlight(MageShieldState)..")")
+	DerpyPrint(highlight("shard").." -- Toggle capping of \124cffffffff\124Hitem:6265:0:0:0:0:0:0:0:0\124h[Soul Shard]\124h\124rs (Currently "..highlight(CapShardState)..")")
+	DerpyPrint(highlight("shard XX").." -- Set \124cffffffff\124Hitem:6265:0:0:0:0:0:0:0:0\124h[Soul Shard]\124h\124r capping value (Currently "..highlight(CapShardNum)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
-	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast "..innervateLink.." on (Currently "..highlight(InnervateState)..")")
-	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are Web Wrapped (Currently "..highlight(SpiderBurritoState)..")")
+	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast \124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on (Currently "..highlight(InnervateState)..")")
+	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are \124cff71d5ff\124Hspell:52086\124h[Web Wrap]\124h\124rped (Currently "..highlight(SpiderBurritoState)..")")
 end
 
 function togglePassive(which) -- Toggle passive functions on/off
@@ -278,13 +274,6 @@ function togglePassive(which) -- Toggle passive functions on/off
 			SpiderBurritoState = "ON"
 		end
 		DerpyPrint("SpiderBurrito is now "..SpiderBurritoState..".")
-	elseif(which=="MageShield") then
-		if(MageShieldState == "ON") then
-			MageShieldState = "OFF"
-		else
-			MageShieldState = "ON"
-		end
-		DerpyPrint("Mage Shield is now "..MageShieldState..".")
 	elseif(which=="GuildDing") then
 		if(GuildDingState == "ON") then
 			GuildDingState = "OFF"
@@ -345,9 +334,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if FullyRestedState == nil then
 			FullyRestedState = "ON" -- Defaults to on, because people never pay attention to the resting icon on their character frame
 		end
-		if MageShieldState == nil then
-			MageShieldState = "OFF" -- Default to off, because it isn't extremely useful
-		end
 		if RepTrackState == nil then
 			RepTrackState = "ON" -- Defaults to on, because it's useful
 		end
@@ -377,9 +363,10 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if(CapShardState~="OFF") then
 			CapShards(CapShardNum)
 		end
-	elseif(event=="UNIT_AURA") then -- Innervate notifier
+	elseif(event=="UNIT_AURA") then
 		receivingUnit = arg1
-
+		
+		-- Innervate notifier
 		if(InnervateState~="OFF") then
 			_, _, _, _, _, _, _, unitCaster = UnitAura(receivingUnit, "Innervate")
 			if(unitCaster ~= nil and receivingUnit ~= nil and unitCaster == "player" and receivingUnit ~= unitCaster and UnitName(unitCaster) ~= UnitName(receivingUnit)) then
@@ -389,7 +376,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end
 			end
 		end
-
 		
 		-- Spider burrito notifier
 		if(SpiderBurritoState~="OFF") then
@@ -398,32 +384,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				if(lastWebWrapMessageTime == nil or time() - lastWebWrapMessageTime > 10) then
 					lastWebWrapMessageTime = time()
 					SendChatMessage("I am a spider burrito! Help me!", "SAY")
-				end
-			end
-		end
-		
-	elseif(event=="UNIT_SPELLCAST_SUCCEEDED") then -- Mage Shields
-		if(MageShieldState~="OFF") then
-			if(IsAddOnLoaded("DBM-Core") == 1) then
-				if(arg1=="player" and arg2 == "Ice Barrier") then
-					SendSlash("dbm timer 24 Ice Barrier")
-				elseif(arg1=="player" and arg2 == "Mana Shield") then
-					local secs = 12; -- Unmodified Mana Shield cooldown
-					local count = 1;
-					while count <= GetNumGlyphSockets() do -- Check if user has the Mana Shield glyph before doing anything (-2 secs Mana Shield CD)
-						enabled, glyphType, glyphTooltipIndex, glyphSpellID = GetGlyphSocketInfo(count);
-						if(enabled==1) then -- Skip disabled slots
-							if(glyphType==1) then -- Skip Prime and Minor glyphs (MS Glyph is Major)
-								if(glyphSpellID~=nil) then -- Skip if the slot is empty
-									if(glyphSpellID==70937) then -- Glyph of Mana Shield Spell ID
-										secs = 10
-									end
-								end
-							end
-						end
-						count = count + 1
-					end
-					SendSlash("dbm timer "..secs.." Mana Shield")
 				end
 			end
 		end
