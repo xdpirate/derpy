@@ -18,6 +18,7 @@ All of the passive functions can be toggled in-game.
 
 ## Activated functions
 - **Gray** -- Purge all gray items from your bags
+- **Skin** -- See what the highest level skinnable mob is with your current skill
 - **LowGray** -- Purge the lowest value gray item slot from your bags
 - **Bag Worth** -- Show the total worth of the items in your bags
 - **Pony** -- Squeal about who has their Crusader Aura on (can be sent to just you, or to party/raid chat)

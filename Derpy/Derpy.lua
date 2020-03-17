@@ -100,6 +100,27 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		RandomPet(0)
     elseif(message == "spet") then
 		RandomPet(1)
+    elseif(message == "skin") then
+		local highestLevelMob = 0
+		
+		for i = 1, GetNumSkillLines(), 1
+		do 
+			local name, _, _, level = GetSkillLineInfo(i)
+			if(name == "Skinning")then
+				if(level < 100) then
+					highestLevelMob = math.floor(((level) / 10) + 10)
+				else
+					highestLevelMob = math.floor(level/5)
+				end
+				
+				DerpyPrint("With a \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill of " .. level .. ", the highest level mob you can skin is " .. highestLevelMob .. ".") 
+				break
+			end
+		end
+		
+		if(highestLevelMob == 0) then
+			DerpyPrint("You need to have the \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill in order to use this function.")
+		end
     elseif(message == "shitstorm") then
 		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
 	elseif(message == "partyachi") then
@@ -199,6 +220,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has \124cff71d5ff\124Hspell:32223\124h[Crusader Aura]\124h\124r enabled")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
+	DerpyPrint(highlight("skin").." -- Outputs highest level monster you can skin (Requires \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r)")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
 	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
