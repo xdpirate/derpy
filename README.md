@@ -15,6 +15,7 @@ A collection of more or less useful functions for legacy versions of WoW (curren
 - **Monster Emote** -- Emphasizes monster emotes such as "Murloc runs away in fear!", by shoving them in your face (displays them in the top error frame)
 - **AntiShitter** ![Only available in the Cataclysm version of the addon][cata] -- Notifies you if there's an ignored player in your party/raid
 - **SetRescue** ![Only available in the Cataclysm version of the addon][cata] -- Automatically buys back items part of an equipment set if sold to a vendor
+- **iLvLUpdate** ![Only available in the Cataclysm version of the addon][cata] -- Notify you when your average equipped item level changes
 
 All of the passive functions can be toggled in-game.
 

@@ -14,6 +14,7 @@ local repTrackLastTimestamp = time()
 local antiShitterLastTimestamp = time()
 local lastInnervateMessageTime = nil
 local lastWebWrapMessageTime = nil
+local lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 
 local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
@@ -49,7 +50,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("PARTY_MEMBERS_CHANGED") -- For AntiShitter
 	DerpyFrame:RegisterEvent("RAID_ROSTER_UPDATE") -- For AntiShitter
 	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
-	
+	DerpyFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- For iLvLUpdate	
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -117,6 +118,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("AntiShitter")
     elseif(message == "setrescue") then
 		togglePassive("SetRescue")
+    elseif(message == "ilvlupdate") then
+		togglePassive("iLvLUpdate")
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
@@ -201,6 +204,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
 	DerpyPrint(highlight("antishitter").." -- Toggle notification when you join a party/raid with an ignored player (Currently "..highlight(AntiShitterState)..")")
 	DerpyPrint(highlight("setrescue").." -- Toggle automatic buyback of equipment set items when at a vendor (Currently "..highlight(SetRescueState)..")")
+	DerpyPrint(highlight("ilvlupdate").." -- Toggle notifying when your average item level changes (Currently "..highlight(iLvLUpdateState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast \124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on (Currently "..highlight(InnervateState)..")")
 	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are \124cff71d5ff\124Hspell:52086\124h[Web Wrap]\124h\124rped (Currently "..highlight(SpiderBurritoState)..")")
 end
@@ -262,6 +266,13 @@ function togglePassive(which) -- Toggle passive functions on/off
 			SetRescueState = "ON"
 		end
 		DerpyPrint("SetRescue is now "..SetRescueState..".")
+	elseif(which=="iLvLUpdate") then
+		if(iLvLUpdateState == "ON") then
+			iLvLUpdateState = "OFF"
+		else
+			iLvLUpdateState = "ON"
+		end
+		DerpyPrint("iLvLUpdate is now "..iLvLUpdateState..".")
 	elseif(which=="GuildDing") then
 		if(GuildDingState == "ON") then
 			GuildDingState = "OFF"
@@ -328,6 +339,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if SetRescueState == nil then
 			SetRescueState = "ON" -- Defaults to on, because it's useful
 		end
+		if iLvLUpdateState == nil then
+			iLvLUpdateState = "OFF" -- Defaults to off, because it can be spammy
+		end
 		if InnervateState == nil then
 			InnervateState = "ON" -- Defaults to on, because it's useful
 		end
@@ -373,6 +387,22 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 
+	elseif(event=="PLAYER_EQUIPMENT_CHANGED") then -- iLvLUpdate
+		if(iLvLUpdateState~="OFF") then
+			local newItemLevel = math.floor(select(2, GetAverageItemLevel()))
+			if(lastAvgItemLevel ~= newItemLevel) then
+				local ilvlString = ""
+			
+				if(newItemLevel > lastAvgItemLevel) then
+					ilvlString = "|cFFFF0000"..lastAvgItemLevel.."|r -> |cFF00FF00"..newItemLevel.."|r"
+				else
+					ilvlString = "|cFF00FF00"..lastAvgItemLevel.."|r -> |cFFFF0000"..newItemLevel.."|r"
+				end
+				
+				DerpyPrint(highlight("iLvLUpdate: ").."Avg. equipped ilvl has changed: "..ilvlString)
+				lastAvgItemLevel = newItemLevel
+			end
+		end
 	elseif(event=="MERCHANT_UPDATE") then -- SetRescue
 		if(SetRescueState~="OFF") then
 			local eqSetCount = GetNumEquipmentSets()
