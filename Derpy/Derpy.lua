@@ -1,5 +1,6 @@
-﻿-- Derpy v2.0
+﻿-- Derpy v2.2
 -- By Moontits/Kugalskap of Dalaran-WoW
+-- Also known as Cursetits/Poodle on Apollo 2
 -- Formerly known as Derpderpderp and Noaide of Ragnaros EU
 
 -- You are free to redistribute and modify this addon, as long 
@@ -8,8 +9,9 @@
 local color = "|cFF66EE66" -- We like green
 local highlightColor = "|cFF9BFF00"
 local original = "|r"
-local CurrentLevelCap = 80 -- With lack of a function to retrieve this dynamically...
+local CurrentLevelCap = 85 -- With lack of a function to retrieve this dynamically...
 local repTrackLastTimestamp = time()
+local antiShitterLastTimestamp = time()
 local lastInnervateMessageTime = nil
 local lastWebWrapMessageTime = nil
 
@@ -33,7 +35,7 @@ end
 
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
-	DerpyPrint("v2.0 loaded (/derpy, /derp, /dr)")
+	DerpyPrint("v2.2-Cata loaded (/derpy, /derp, /dr)")
 	
 	DerpyFrame:RegisterEvent("VARIABLES_LOADED") -- So we can detect user preferences
 	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
@@ -43,7 +45,11 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate and SpiderBurrito function
-	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge and CapShard functions
+	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge
+	DerpyFrame:RegisterEvent("PARTY_MEMBERS_CHANGED") -- For AntiShitter
+	DerpyFrame:RegisterEvent("RAID_ROSTER_UPDATE") -- For AntiShitter
+	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
+	
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -64,19 +70,6 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	DerpyRepFrame.text:SetTextColor(1, 1, 1)
 	DerpyRepFrame.text:SetAllPoints()
-	
-	StaticPopupDialogs["ConfirmDeleteAllGrayItems"] = {
-		text = "Are you sure you want to purge all gray items in your bags? This cannot be undone.",
-		button1 = "Yes",
-		button2 = "No",
-		OnAccept = function()
-		  PurgeGrayItems()
-		end,
-		timeout = 0,
-		whileDead = true,
-		hideOnEscape = true,
-		preferredIndex = 3
-	}
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -93,34 +86,13 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 	elseif(message == "lowgray" or message == "lowgrey") then
 		PurgeLowestValueGray()
 	elseif(message == "gray" or message == "grey") then
-		StaticPopup_Show("ConfirmDeleteAllGrayItems")
+		PurgeGrayItems(true)
 	elseif(message == "bookclub") then
 		HigherLearningWaypoints()
     elseif(message == "pet") then
 		RandomPet(0)
     elseif(message == "spet") then
 		RandomPet(1)
-    elseif(message == "skin") then
-		local highestLevelMob = 0
-		
-		for i = 1, GetNumSkillLines(), 1
-		do 
-			local name, _, _, level = GetSkillLineInfo(i)
-			if(name == "Skinning")then
-				if(level < 100) then
-					highestLevelMob = math.floor(((level) / 10) + 10)
-				else
-					highestLevelMob = math.floor(level/5)
-				end
-				
-				DerpyPrint("With a \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill of " .. level .. ", the highest level mob you can skin is " .. highestLevelMob .. ".") 
-				break
-			end
-		end
-		
-		if(highestLevelMob == 0) then
-			DerpyPrint("You need to have the \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill in order to use this function.")
-		end
     elseif(message == "shitstorm") then
 		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
 	elseif(message == "partyachi") then
@@ -141,22 +113,10 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("Innervate")
     elseif(message == "sb" or message == "spiderburrito") then
 		togglePassive("SpiderBurrito")
-    elseif(starts_with(message, "shard")) then
-		if(message == "shard") then
-			togglePassive("CapShard")
-		else
-			local num = tonumber(strmatch(message, "shard (%d+)"))
-			if(num ~= nil) then
-				if(num < 2) then
-					DerpyPrint("The minimum value for CapShard is 2.")
-				elseif(num > 31) then
-					DerpyPrint("The maximum value for CapShard is 31, as you cannot carry more than 32 shards at any one time.")
-				else
-					CapShardNum = num
-					DerpyPrint("CapShard will now cap Soul Shards at "..num..".")
-				end
-			end
-		end
+    elseif(message == "antishitter") then
+		togglePassive("AntiShitter")
+    elseif(message == "setrescue") then
+		togglePassive("SetRescue")
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
@@ -164,7 +124,7 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
     elseif(message == "speed") then
 		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%")
     elseif(message == "about") then
-        DerpyPrint("was made by Moontits/Kugalskap of Dalaran-WoW, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
+        DerpyPrint("was made by Cursetits/Poodle of Apollo 2, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on a WotLK private server.")
 	elseif(message == "" or message == nil or message == " ") then
 		ShowUsage()
 	else
@@ -220,7 +180,6 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
 	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has \124cff71d5ff\124Hspell:32223\124h[Crusader Aura]\124h\124r enabled")
 	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
-	DerpyPrint(highlight("skin").." -- Outputs highest level monster you can skin (Requires \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r)")
 	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
 	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
@@ -238,10 +197,10 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
-	DerpyPrint(highlight("shard").." -- Toggle capping of \124cffffffff\124Hitem:6265:0:0:0:0:0:0:0:0\124h[Soul Shard]\124h\124rs (Currently "..highlight(CapShardState)..")")
-	DerpyPrint(highlight("shard XX").." -- Set \124cffffffff\124Hitem:6265:0:0:0:0:0:0:0:0\124h[Soul Shard]\124h\124r capping value (Currently "..highlight(CapShardNum)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
+	DerpyPrint(highlight("antishitter").." -- Toggle notification when you join a party/raid with an ignored player (Currently "..highlight(AntiShitterState)..")")
+	DerpyPrint(highlight("setrescue").." -- Toggle automatic buyback of equipment set items when at a vendor (Currently "..highlight(SetRescueState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast \124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on (Currently "..highlight(InnervateState)..")")
 	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are \124cff71d5ff\124Hspell:52086\124h[Web Wrap]\124h\124rped (Currently "..highlight(SpiderBurritoState)..")")
 end
@@ -254,13 +213,6 @@ function togglePassive(which) -- Toggle passive functions on/off
 			RepTrackState = "ON"
 		end
 		DerpyPrint("RepTrack is now "..RepTrackState..".")
-	elseif(which=="CapShard") then
-		if(CapShardState == "ON") then
-			CapShardState = "OFF"
-		else
-			CapShardState = "ON"
-		end
-		DerpyPrint("CapShard is now "..CapShardState..".")
 	elseif(which=="RepAnnounce") then
 		if(RepAnnounceState == "ON") then
 			RepAnnounceState = "OFF"
@@ -296,6 +248,20 @@ function togglePassive(which) -- Toggle passive functions on/off
 			SpiderBurritoState = "ON"
 		end
 		DerpyPrint("SpiderBurrito is now "..SpiderBurritoState..".")
+	elseif(which=="AntiShitter") then
+		if(AntiShitterState == "ON") then
+			AntiShitterState = "OFF"
+		else
+			AntiShitterState = "ON"
+		end
+		DerpyPrint("AntiShitter is now "..AntiShitterState..".")
+	elseif(which=="SetRescue") then
+		if(SetRescueState == "ON") then
+			SetRescueState = "OFF"
+		else
+			SetRescueState = "ON"
+		end
+		DerpyPrint("SetRescue is now "..SetRescueState..".")
 	elseif(which=="GuildDing") then
 		if(GuildDingState == "ON") then
 			GuildDingState = "OFF"
@@ -338,12 +304,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if(GlobalAutoPurgeItems == nil) then
 			GlobalAutoPurgeItems = {}
 		end
-		if CapShardState == nil then
-			CapShardState = "OFF" -- Defaults to off
-		end
-		if CapShardNum == nil then
-			CapShardNum = 15 -- Defaults to 15, because who ever needs more than 15 soul shards?
-		end
 		if PartyAchievementState == nil then
 			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 		end
@@ -362,6 +322,12 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if RepAnnounceState == nil then
 			RepAnnounceState = "ON" -- Defaults to on, because it's useful
 		end
+		if AntiShitterState == nil then
+			AntiShitterState = "ON" -- Defaults to on, because it's useful
+		end
+		if SetRescueState == nil then
+			SetRescueState = "ON" -- Defaults to on, because it's useful
+		end
 		if InnervateState == nil then
 			InnervateState = "ON" -- Defaults to on, because it's useful
 		end
@@ -375,6 +341,68 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			AutoPurgeVerbose = "OFF" -- Defaults to off, because it's annoying
 		end
 		
+	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
+		if(difftime(time(), antiShitterLastTimestamp) > 4) then -- Avoids notifying more often than every 5 seconds
+			-- Build refreshed table of ignored players
+			local ignoredPlayers = {} 
+			local numIgnored = GetNumIgnores() 
+			for i = 1, numIgnored, 1 do 
+				table.insert(ignoredPlayers, GetIgnoreName(i))
+			end
+		
+			if(GetNumRaidMembers() > 0) then
+				local raidMembers = GetNumRaidMembers()
+				
+				for i = 1, raidMembers, 1 do
+					if(has_value(ignoredPlayers, UnitName("raid"..i))) then
+						-- freak out
+						DerpyPrint("Ignored player "..highlight(UnitName("raid"..i)).." detected in your raid group!")
+						antiShitterLastTimestamp = time() -- Record timestamp of last notification
+					end
+				end
+			elseif(GetNumPartyMembers() > 0) then
+				local partyMembers = GetNumPartyMembers()
+				
+				for i = 1, partyMembers, 1 do
+					if(has_value(ignoredPlayers, UnitName("party"..i))) then
+						-- freak out
+						DerpyPrint("Ignored player "..highlight(UnitName("party"..i)).." detected in your party!")
+						antiShitterLastTimestamp = time() -- Record timestamp of last notification
+					end
+				end
+			end
+		end
+
+	elseif(event=="MERCHANT_UPDATE") then -- SetRescue
+		if(SetRescueState~="OFF") then
+			local eqSetCount = GetNumEquipmentSets()
+				
+			for i = 1, eqSetCount, 1 do 
+				local eqSetName = GetEquipmentSetInfo(i)
+				local eqSetItems = GetEquipmentSetItemIDs(eqSetName)
+				for j = 1, 19 do
+					if eqSetItems[j] then
+						local eqSetItemName = (GetItemInfo(eqSetItems[j]))
+						if(eqSetItemName ~= nil) then
+							for k = 1, GetNumBuybackItems() do
+								local link = GetBuybackItemLink(k)
+
+								if link then
+									local buyBackItemName = (GetItemInfo(link:match("item:(%d+):")))
+									
+									if buyBackItemName == eqSetItemName then
+										BuybackItem(k)
+										DerpyPrint(highlight("SetRescue Warning: ")..link.." is a part of the equipment set \""..eqSetName.."\", and has been automatically bought back from the vendor.")
+										return -- we no likey recursion
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
 	elseif(event=="BAG_UPDATE") then -- AutoPurge
 		if(AutoPurgeState~="OFF") then
 			if(InCombatLockdown()==nil) then -- Do nothing in combat to avoid fuckery
@@ -382,9 +410,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 		
-		if(CapShardState~="OFF") then
-			CapShards(CapShardNum)
-		end
 	elseif(event=="UNIT_AURA") then
 		receivingUnit = arg1
 		
@@ -458,7 +483,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			if(newLevel ~= nil and factionName ~= nil) then
 				DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
 				UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
-				PlaySound(10043)
+				PlaySoundFile("Sound\\Spells\\DivineStormDamage1.wav", "master")
 				
 				local t = 5
 				DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -483,37 +508,20 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 						do
 							factionName = GetFactionInfo(factionCounter)
 							if(factionName == currGainedFaction) then
-								currWatched = GetWatchedFactionInfo()
-								if(currGainedFaction~=currWatched) then
-									DerpyPrint("Changed watched faction to "..factionName.."!")
+								if(factionName ~= "Guild") then
+									currWatched = GetWatchedFactionInfo()
+									if(currGainedFaction~=currWatched) then
+										DerpyPrint("Changed watched faction to "..factionName.."!")
+									end
+									
+									SetWatchedFactionIndex(factionCounter)
+									repTrackLastTimestamp = time() -- Record timestamp of last watched faction change time
+									break
 								end
-								
-								SetWatchedFactionIndex(factionCounter)
-								repTrackLastTimestamp = time() -- Record timestamp of last watched faction change time
-								break
 							end
 						end
 					end
 				end				
-			end
-		end
-	end
-end
-
-function CapShards(num) -- Shamelessly stolen from the internets, just like everything else in this addon lmaoooo
-	local i = "Soul Shard"
-	local d = GetItemCount(i) - num
-	for x=0,4
-	do
-		for y=1,GetContainerNumSlots(x)
-		do
-			if (d > 0) then
-				local l = GetContainerItemLink(x,y)
-				if l and GetItemInfo(l) == i then
-					PickupContainerItem(x,y)
-					DeleteCursorItem()
-					d = d - 1
-				end
 			end
 		end
 	end
@@ -752,7 +760,7 @@ function PurgeLowestValueGray()
 	end 
 end
 
-function PurgeGrayItems() -- Delete all gray items from bags
+function PurgeGrayItems(dryRun) -- Delete all gray items from bags
 	purgeCount = 0
 	slotCount = 0
 	wastedGoldCount = 0
@@ -770,8 +778,11 @@ function PurgeGrayItems() -- Delete all gray items from bags
 				itemSellPrice = select(11, unpack(itemInfo))
 				
 				if (rarity == 0) then -- It's a gray item
-					PickupContainerItem(bag, slot) 
-					DeleteCursorItem() 
+					if(dryRun == false) then
+						PickupContainerItem(bag, slot) 
+						DeleteCursorItem() 
+					end
+					
 					purgeCount = purgeCount + itemCount
 					slotCount = slotCount + 1
 					wastedGoldCount = wastedGoldCount + (itemSellPrice * itemCount)
@@ -781,7 +792,24 @@ function PurgeGrayItems() -- Delete all gray items from bags
 	end
 	
 	if(purgeCount > 0) then
-		DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+		if(dryRun == true) then
+			StaticPopupDialogs["ConfirmDeleteAllGrayItems"] = {
+				text = "Are you sure you want to purge the "..purgeCount.." |4gray item:gray items; in your bags? This action cannot be undone.\n\nTotal vendor worth:\n"..GetCoinTextureString(wastedGoldCount),
+				button1 = "Yes",
+				button2 = "No",
+				OnAccept = function()
+				  PurgeGrayItems(false)
+				end,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				preferredIndex = 3
+			}
+			
+			StaticPopup_Show("ConfirmDeleteAllGrayItems")
+		else
+				DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+		end
 	else
 		DerpyPrint("You have no gray items in your bags.")
 	end

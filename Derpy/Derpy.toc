@@ -1,11 +1,11 @@
-## Interface: 30300
+## Interface: 40300
 ## Title-enGB: Derpy
-## Author: Moontits/Kugalskap of Dalaran-WoW
-## Version: 2.1
+## Author: Cursetits of Apollo 2
+## Version: 2.2
 ## Notes: Hurr durr herp derp
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems, SpiderBurritoState
-##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose, CapShardState, CapShardNum
+##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems, SpiderBurritoState, AntiShitterState, SetRescueState
+##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose
 Derpy.lua
 Derpy.xml
