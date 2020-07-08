@@ -14,7 +14,7 @@ local repTrackLastTimestamp = time()
 local antiShitterLastTimestamp = time()
 local lastInnervateMessageTime = nil
 local lastWebWrapMessageTime = nil
-local lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
+local lastAvgItemLevel = nil
 
 local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
@@ -32,7 +32,6 @@ factionStandingColors = {
 local function starts_with(str, start)
    return str:sub(1, #start) == start
 end
-
 
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
@@ -309,6 +308,8 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	if(event=="VARIABLES_LOADED") then
 		CombatTextSetActiveUnit("player") -- For RepTrack to work
 		
+		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
+		
 		if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
 			AutoPurgeItems = {}
 		end
@@ -506,23 +507,25 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		end
 	
 	elseif(event=="CHAT_MSG_SYSTEM") then -- RepAnnounce
-		currentChatMessage = arg1
-		
-		if(starts_with(currentChatMessage, "You are now ")) then
-			newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
-			if(newLevel ~= nil and factionName ~= nil) then
-				DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
-				UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
-				PlaySoundFile("Sound\\Spells\\DivineStormDamage1.wav", "master")
-				
-				local t = 5
-				DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
-					 t = t - elapsed
-					 if t <= 0 then
-						DerpyRepFrame:SetScript("OnUpdate", nil)
-						UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
-					 end
-				end)
+		if(RepAnnounceState~="OFF") then
+			currentChatMessage = arg1
+			
+			if(starts_with(currentChatMessage, "You are now ")) then
+				newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
+				if(newLevel ~= nil and factionName ~= nil) then
+					DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
+					UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
+					PlaySoundFile("Sound\\Spells\\DivineStormDamage1.wav", "master")
+					
+					local t = 5
+					DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
+						 t = t - elapsed
+						 if t <= 0 then
+							DerpyRepFrame:SetScript("OnUpdate", nil)
+							UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
+						 end
+					end)
+				end
 			end
 		end
 		
