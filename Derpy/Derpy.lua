@@ -37,7 +37,7 @@ function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
 	DerpyPrint("v2.2-Cata loaded (/derpy, /derp, /dr)")
 	
-	DerpyFrame:RegisterEvent("VARIABLES_LOADED") -- So we can detect user preferences
+	DerpyFrame:RegisterEvent("ADDON_LOADED") -- So we can detect user preferences
 	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
 	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP") -- For Guild Ding function
 	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING") -- For Rested function
@@ -50,6 +50,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("RAID_ROSTER_UPDATE") -- For AntiShitter
 	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
 	DerpyFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- For iLvLUpdate	
+	DerpyFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- For iLvLUpdate	to get accurate average item level upon login
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -70,8 +71,6 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	DerpyRepFrame.text:SetTextColor(1, 1, 1)
 	DerpyRepFrame.text:SetAllPoints()
-	
-	lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -307,54 +306,59 @@ end
 
 function Derpy_OnEvent(self, event, ...) -- Event handler
 	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
-	if(event=="VARIABLES_LOADED") then
-		CombatTextSetActiveUnit("player") -- For RepTrack to work
+	if(event=="ADDON_LOADED") then
+		if(arg1=="Derpy") then
+			CombatTextSetActiveUnit("player") -- For RepTrack to work
+			
+			if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
+				AutoPurgeItems = {}
+			end
+			if(GlobalAutoPurgeItems == nil) then
+				GlobalAutoPurgeItems = {}
+			end
+			if PartyAchievementState == nil then
+				PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
+			end
+			if MonsterEmoteState == nil then
+				MonsterEmoteState = "ON" -- Defaults to on, because it's useful
+			end
+			if GuildDingState == nil then
+				GuildDingState = "OFF" -- Defaults to off, because it's cancerous
+			end
+			if FullyRestedState == nil then
+				FullyRestedState = "ON" -- Defaults to on, because people never pay attention to the resting icon on their character frame
+			end
+			if RepTrackState == nil then
+				RepTrackState = "ON" -- Defaults to on, because it's useful
+			end
+			if RepAnnounceState == nil then
+				RepAnnounceState = "ON" -- Defaults to on, because it's useful
+			end
+			if AntiShitterState == nil then
+				AntiShitterState = "ON" -- Defaults to on, because it's useful
+			end
+			if SetRescueState == nil then
+				SetRescueState = "ON" -- Defaults to on, because it's useful
+			end
+			if iLvLUpdateState == nil then
+				iLvLUpdateState = "OFF" -- Defaults to off, because it can be spammy
+			end
+			if InnervateState == nil then
+				InnervateState = "ON" -- Defaults to on, because it's useful
+			end
+			if SpiderBurritoState == nil then
+				SpiderBurritoState = "ON" -- Defaults to on, because it's useful
+			end
+			if AutoPurgeState == nil then
+				AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
+			end
+			if AutoPurgeVerbose == nil then
+				AutoPurgeVerbose = "OFF" -- Defaults to off, because it's annoying
+			end
+		end
 		
-		if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
-			AutoPurgeItems = {}
-		end
-		if(GlobalAutoPurgeItems == nil) then
-			GlobalAutoPurgeItems = {}
-		end
-		if PartyAchievementState == nil then
-			PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
-		end
-		if MonsterEmoteState == nil then
-			MonsterEmoteState = "ON" -- Defaults to on, because it's useful
-		end
-		if GuildDingState == nil then
-			GuildDingState = "OFF" -- Defaults to off, because it's cancerous
-		end
-		if FullyRestedState == nil then
-			FullyRestedState = "ON" -- Defaults to on, because people never pay attention to the resting icon on their character frame
-		end
-		if RepTrackState == nil then
-			RepTrackState = "ON" -- Defaults to on, because it's useful
-		end
-		if RepAnnounceState == nil then
-			RepAnnounceState = "ON" -- Defaults to on, because it's useful
-		end
-		if AntiShitterState == nil then
-			AntiShitterState = "ON" -- Defaults to on, because it's useful
-		end
-		if SetRescueState == nil then
-			SetRescueState = "ON" -- Defaults to on, because it's useful
-		end
-		if iLvLUpdateState == nil then
-			iLvLUpdateState = "OFF" -- Defaults to off, because it can be spammy
-		end
-		if InnervateState == nil then
-			InnervateState = "ON" -- Defaults to on, because it's useful
-		end
-		if SpiderBurritoState == nil then
-			SpiderBurritoState = "ON" -- Defaults to on, because it's useful
-		end
-		if AutoPurgeState == nil then
-			AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
-		end
-		if AutoPurgeVerbose == nil then
-			AutoPurgeVerbose = "OFF" -- Defaults to off, because it's annoying
-		end
+	elseif(event=="PLAYER_ENTERING_WORLD") then -- All data should be loaded, update last seen average itemlevel
+		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 		
 	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
 		if(difftime(time(), antiShitterLastTimestamp) > 4) then -- Avoids notifying more often than every 5 seconds
@@ -392,15 +396,17 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		if(iLvLUpdateState~="OFF") then
 			local newItemLevel = math.floor(select(2, GetAverageItemLevel()))
 			if(lastAvgItemLevel ~= newItemLevel) then
-				local ilvlString = ""
-			
-				if(newItemLevel > lastAvgItemLevel) then
-					ilvlString = "|cFFFF0000"..lastAvgItemLevel.."|r -> |cFF00FF00"..newItemLevel.."|r"
-				else
-					ilvlString = "|cFF00FF00"..lastAvgItemLevel.."|r -> |cFFFF0000"..newItemLevel.."|r"
-				end
+				if(lastAvgItemLevel ~= 0) then
+					local ilvlString = ""
 				
-				DerpyPrint(highlight("iLvLUpdate: ").."Avg. equipped ilvl has changed: "..ilvlString)
+					if(newItemLevel > lastAvgItemLevel) then
+						ilvlString = "|cFFFF0000"..lastAvgItemLevel.."|r -> |cFF00FF00"..newItemLevel.."|r"
+					else
+						ilvlString = "|cFF00FF00"..lastAvgItemLevel.."|r -> |cFFFF0000"..newItemLevel.."|r"
+					end
+					
+					DerpyPrint(highlight("iLvLUpdate: ").."Avg. equipped ilvl has changed: "..ilvlString)
+				end
 				lastAvgItemLevel = newItemLevel
 			end
 		end
