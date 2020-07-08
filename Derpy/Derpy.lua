@@ -70,6 +70,8 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	DerpyRepFrame.text:SetTextColor(1, 1, 1)
 	DerpyRepFrame.text:SetAllPoints()
+	
+	lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -307,8 +309,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
 	if(event=="VARIABLES_LOADED") then
 		CombatTextSetActiveUnit("player") -- For RepTrack to work
-		
-		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 		
 		if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
 			AutoPurgeItems = {}
