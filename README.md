@@ -22,7 +22,7 @@ When turned on, these functions will work automatically:
 All of the passive functions can be easily toggled in-game. As seen above, the spammy or annoying functions are off by default, until you turn them on.
 
 ## Manually activated functions
-These functions have to be activated manually through the command line or by using it in a macro:
+These functions have to be activated manually through the command line or by using them in a macro:
 - **Bag Worth** -- Show the total worth of the items in your bags
 - **Book Club** -- Add TomTom waypoints for the Higher Learning achievement in Dalaran
 - **Gray** -- Purge all gray items from your bags (asks for confirmation first)
