@@ -7,6 +7,7 @@ A collection of more or less useful functions for legacy versions of WoW (curren
 - **CapShard** ![Only available in the WotLK version of the addon][wotlk] -- Caps the amount of Soul Shards you carry to a certain number. When this is on, any excess shards are automatically deleted
 - **RepTrack** -- Changes your currently watched faction ("display as bar") whenever you gain reputation
 - **RepAnnounce** -- Shows you a notification and plays a non-intrusive sound whenever your standing with a faction changes
+- **RepCalc** ![Only available in the Cataclysm version of the addon][cata] -- Shows you progress to next reputation level whenever you gain reputation with a non-Exalted faction
 - **Innervate Notifier** -- Sends a whisper to the receiving target when you cast Innervate on them
 - **SpiderBurrito** -- Notifies nearby players when you are afflicted by Web Wrap
 - **Rested Notifier** -- Notifies you when entering or leaving a resting area, showing how much rested XP you've accumulated, if any

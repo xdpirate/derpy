@@ -42,7 +42,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP") -- For Guild Ding function
 	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING") -- For Rested function
 	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE") -- For Monster Emote function
-	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack function
+	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack and RepCalc functions
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
 	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate and SpiderBurrito function
 	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge
@@ -108,6 +108,8 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("GuildDing")
     elseif(message == "repa") then
 		togglePassive("RepAnnounce")
+    elseif(message == "repc") then
+		togglePassive("RepCalc")
     elseif(message == "rep") then
 		togglePassive("RepTrack")
     elseif(message == "ivt" or message == "innervate") then
@@ -202,6 +204,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
 	DerpyPrint(highlight("rep").." -- Toggle auto-changing watched faction when you gain rep (Currently "..highlight(RepTrackState)..")")
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
+	DerpyPrint(highlight("repc").." -- Toggle showing you progress to the next reputation level whenever you gain rep (Currently "..highlight(RepCalcState)..")")
 	DerpyPrint(highlight("antishitter").." -- Toggle notification when you join a party/raid with an ignored player (Currently "..highlight(AntiShitterState)..")")
 	DerpyPrint(highlight("setrescue").." -- Toggle automatic buyback of equipment set items when at a vendor (Currently "..highlight(SetRescueState)..")")
 	DerpyPrint(highlight("ilvlupdate").." -- Toggle notifying when your average item level changes (Currently "..highlight(iLvLUpdateState)..")")
@@ -224,6 +227,13 @@ function togglePassive(which) -- Toggle passive functions on/off
 			RepAnnounceState = "ON"
 		end
 		DerpyPrint("RepAnnounce is now "..RepAnnounceState..".")
+	elseif(which=="RepCalc") then
+		if(RepCalcState == "ON") then
+			RepCalcState = "OFF"
+		else
+			RepCalcState = "ON"
+		end
+		DerpyPrint("RepCalc is now "..RepCalcState..".")
 	elseif(which=="AutoPurge") then
 		if(AutoPurgeState == "ON") then
 			AutoPurgeState = "OFF"
@@ -334,6 +344,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			if RepAnnounceState == nil then
 				RepAnnounceState = "ON" -- Defaults to on, because it's useful
 			end
+			if RepCalcState == nil then
+				RepCalcState = "OFF" -- Defaults to off, because it's spammy
+			end
 			if AntiShitterState == nil then
 				AntiShitterState = "ON" -- Defaults to on, because it's useful
 			end
@@ -361,7 +374,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 		
 	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
-		if(difftime(time(), antiShitterLastTimestamp) > 4) then -- Avoids notifying more often than every 5 seconds
+		if(difftime(time(), antiShitterLastTimestamp) > 29) then -- Avoids notifying more often than every 30 seconds
 			-- Build refreshed table of ignored players
 			local ignoredPlayers = {} 
 			local numIgnored = GetNumIgnores() 
@@ -410,6 +423,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				lastAvgItemLevel = newItemLevel
 			end
 		end
+		
 	elseif(event=="MERCHANT_UPDATE") then -- SetRescue
 		if(SetRescueState~="OFF") then
 			local eqSetCount = GetNumEquipmentSets()
@@ -535,17 +549,17 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 		
-	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack - Automatically change watched faction when you gain rep
-		if(RepTrackState~="OFF") then
-			if(arg1=="FACTION") then
-				currGainedFaction = arg2
-				repGain = arg3
-				if(repGain > 0) then -- Ignore negative reputation
+	elseif(event=="COMBAT_TEXT_UPDATE") then -- RepTrack and RepCalc
+		if(arg1=="FACTION") then
+			local currGainedFaction = arg2
+			local repGain = arg3
+			if(repGain > 0) then -- Ignore negative reputation					
+				if(RepTrackState~="OFF") then -- RepTrack - Automatically change watched faction when you gain rep
 					if(difftime(time(), repTrackLastTimestamp) > 1) then -- Avoids changing watched faction rapidly on multiple gains within a couple of seconds
-						numFactions = GetNumFactions()
+						local numFactions = GetNumFactions()
 						for factionCounter = 0, numFactions, 1
 						do
-							factionName = GetFactionInfo(factionCounter)
+							local factionName = GetFactionInfo(factionCounter)
 							if(factionName == currGainedFaction) then
 								if(factionName ~= "Guild") then
 									currWatched = GetWatchedFactionInfo()
@@ -561,6 +575,29 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 						end
 					end
 				end				
+					
+				if(RepCalcState~="OFF") then -- RepCalc - Show progress to next reputation standing level whenever you gain rep
+					local numFactions = GetNumFactions()
+					for factionCounter = 0, numFactions, 1
+					do
+						local factionName, _, standingId, bottomValue, topValue, earnedValue = GetFactionInfo(factionCounter)
+						if(factionName == currGainedFaction) then
+							if(factionName ~= "Guild") then
+								local currentRep = earnedValue - bottomValue
+								local currentCeiling = topValue - bottomValue
+								local missingRepForNextLevel = currentCeiling - currentRep
+								local additionalGains = math.ceil(missingRepForNextLevel / repGain)
+								
+								if(standingId < 8 and standingId > 0) then -- Ignore Exalted and Unknown levels
+									local nextRepLevel = getglobal("FACTION_STANDING_LABEL"..standingId+1)
+									DerpyPrint(highlight("RepCalc: ")..additionalGains.." |4more gain:more gains; like that until you hit |cFF"..factionStandingColors[nextRepLevel]..nextRepLevel.."|r with |cFFFFF569"..factionName.."|r!")
+								end
+								
+								break
+							end
+						end
+					end
+				end
 			end
 		end
 	end
