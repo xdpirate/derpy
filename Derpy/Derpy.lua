@@ -1,4 +1,4 @@
-﻿-- Derpy v2.2
+﻿-- Derpy v2.3
 -- By Moontits/Kugalskap of Dalaran-WoW
 -- Also known as Cursetits/Poodle on Apollo 2
 -- Formerly known as Derpderpderp and Noaide of Ragnaros EU
@@ -35,7 +35,7 @@ end
 
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
-	DerpyPrint("v2.2-Cata loaded (/derpy, /derp, /dr)")
+	DerpyPrint("v2.3-Cata loaded (/derpy, /derp, /dr)")
 	
 	DerpyFrame:RegisterEvent("ADDON_LOADED") -- So we can detect user preferences
 	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
@@ -80,6 +80,12 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		DerpyPrint("durr") -- derp
 	elseif(starts_with(message, "autopurge")) then
 		AutoPurgeHandler(message)
+	elseif(message == "options") then
+		if(DerpyOptionsFrame:IsShown()) then
+			DerpyOptionsFrame:Hide()
+		else
+			DerpyOptionsFrame:Show()
+		end
 	elseif(message == "tf") then
 		DerpyPrint("\124cffff8000\124Hitem:19019:0:0:0:0:0:0:0:0\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
 	elseif(message == "bagworth") then
@@ -97,31 +103,31 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
     elseif(message == "shitstorm") then
 		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
 	elseif(message == "partyachi") then
-		togglePassive("PartyAchievement")
+		togglePassive("PartyAchievement", 1)
 	elseif(message == "rested") then
-		togglePassive("FullyRested")
+		togglePassive("FullyRested", 1)
 	elseif(message == "monster") then
-		togglePassive("MonsterEmote")
+		togglePassive("MonsterEmote", 1)
 	elseif(starts_with(message, "pony")) then
 		PonyTime(message)
 	elseif(message == "gding") then
-		togglePassive("GuildDing")
+		togglePassive("GuildDing", 1)
     elseif(message == "repa") then
-		togglePassive("RepAnnounce")
+		togglePassive("RepAnnounce", 1)
     elseif(message == "repc") then
-		togglePassive("RepCalc")
+		togglePassive("RepCalc", 1)
     elseif(message == "rep") then
-		togglePassive("RepTrack")
+		togglePassive("RepTrack", 1)
     elseif(message == "ivt" or message == "innervate") then
-		togglePassive("Innervate")
+		togglePassive("Innervate", 1)
     elseif(message == "sb" or message == "spiderburrito") then
-		togglePassive("SpiderBurrito")
+		togglePassive("SpiderBurrito", 1)
     elseif(message == "antishitter") then
-		togglePassive("AntiShitter")
+		togglePassive("AntiShitter", 1)
     elseif(message == "setrescue") then
-		togglePassive("SetRescue")
+		togglePassive("SetRescue", 1)
     elseif(message == "ilvlupdate") then
-		togglePassive("iLvLUpdate")
+		togglePassive("iLvLUpdate", 1)
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
@@ -179,6 +185,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint("Usage: "..color.."/derp "..highlight("<command>"))
 	DerpyPrint("(/derp can be substituted for /dr or /derpy)")
 	DerpyPrint("Available commands:")
+	DerpyPrint(highlight("options").." -- Show the graphical options window")
 	DerpyPrint(highlight("passive").." -- View and toggle Derpy's passive functions")
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
@@ -212,56 +219,70 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are \124cff71d5ff\124Hspell:52086\124h[Web Wrap]\124h\124rped (Currently "..highlight(SpiderBurritoState)..")")
 end
 
-function togglePassive(which) -- Toggle passive functions on/off
+function togglePassive(which, verbose) -- Toggle passive functions on/off
 	if(which=="RepTrack") then
 		if(RepTrackState == "ON") then
 			RepTrackState = "OFF"
 		else
 			RepTrackState = "ON"
 		end
-		DerpyPrint("RepTrack is now "..RepTrackState..".")
+		if(verbose==1) then
+			DerpyPrint("RepTrack is now "..RepTrackState..".") 
+		end
 	elseif(which=="RepAnnounce") then
 		if(RepAnnounceState == "ON") then
 			RepAnnounceState = "OFF"
 		else
 			RepAnnounceState = "ON"
 		end
-		DerpyPrint("RepAnnounce is now "..RepAnnounceState..".")
+		if(verbose==1) then
+			DerpyPrint("RepAnnounce is now "..RepAnnounceState..".")
+		end
 	elseif(which=="RepCalc") then
 		if(RepCalcState == "ON") then
 			RepCalcState = "OFF"
 		else
 			RepCalcState = "ON"
 		end
-		DerpyPrint("RepCalc is now "..RepCalcState..".")
+		if(verbose==1) then
+			DerpyPrint("RepCalc is now "..RepCalcState..".")
+		end
 	elseif(which=="AutoPurge") then
 		if(AutoPurgeState == "ON") then
 			AutoPurgeState = "OFF"
 		else
 			AutoPurgeState = "ON"
 		end
-		DerpyPrint("AutoPurge is now "..AutoPurgeState..".")
+		if(verbose==1) then
+			DerpyPrint("AutoPurge is now "..AutoPurgeState..".")
+		end
 	elseif(which=="AutoPurgeVerbose") then
 		if(AutoPurgeVerbose == "ON") then
 			AutoPurgeVerbose = "OFF"
 		else
 			AutoPurgeVerbose = "ON"
 		end
-		DerpyPrint("AutoPurge verbose mode is now "..AutoPurgeVerbose..".")
+		if(verbose==1) then
+			DerpyPrint("AutoPurge verbose mode is now "..AutoPurgeVerbose..".")
+		end
 	elseif(which=="Innervate") then
 		if(InnervateState == "ON") then
 			InnervateState = "OFF"
 		else
 			InnervateState = "ON"
 		end
-		DerpyPrint("Innervate whispers are now "..InnervateState..".")
+		if(verbose==1) then
+			DerpyPrint("Innervate whispers are now "..InnervateState..".")
+		end
 	elseif(which=="SpiderBurrito") then
 		if(SpiderBurritoState == "ON") then
 			SpiderBurritoState = "OFF"
 		else
 			SpiderBurritoState = "ON"
 		end
-		DerpyPrint("SpiderBurrito is now "..SpiderBurritoState..".")
+		if(verbose==1) then
+			DerpyPrint("SpiderBurrito is now "..SpiderBurritoState..".")
+		end
 	elseif(which=="AntiShitter") then
 		if(AntiShitterState == "ON") then
 			AntiShitterState = "OFF"
@@ -275,42 +296,54 @@ function togglePassive(which) -- Toggle passive functions on/off
 		else
 			SetRescueState = "ON"
 		end
-		DerpyPrint("SetRescue is now "..SetRescueState..".")
+		if(verbose==1) then
+			DerpyPrint("SetRescue is now "..SetRescueState..".")
+		end
 	elseif(which=="iLvLUpdate") then
 		if(iLvLUpdateState == "ON") then
 			iLvLUpdateState = "OFF"
 		else
 			iLvLUpdateState = "ON"
 		end
-		DerpyPrint("iLvLUpdate is now "..iLvLUpdateState..".")
+		if(verbose==1) then
+			DerpyPrint("iLvLUpdate is now "..iLvLUpdateState..".")
+		end
 	elseif(which=="GuildDing") then
 		if(GuildDingState == "ON") then
 			GuildDingState = "OFF"
 		else
 			GuildDingState = "ON"
 		end
-		DerpyPrint("Guild Ding is now "..GuildDingState..".")
+		if(verbose==1) then
+			DerpyPrint("Guild Ding is now "..GuildDingState..".")
+		end
 	elseif(which=="FullyRested") then
 		if(FullyRestedState == "ON") then
 			FullyRestedState = "OFF"
 		else
 			FullyRestedState = "ON"
 		end
-		DerpyPrint("Rested is now "..FullyRestedState..".")
+		if(verbose==1) then
+			DerpyPrint("Rested is now "..FullyRestedState..".")
+		end
 	elseif(which=="MonsterEmote") then
 		if(MonsterEmoteState == "ON") then
 			MonsterEmoteState = "OFF"
 		else
 			MonsterEmoteState = "ON"
 		end
-		DerpyPrint("Monster Emote is now "..MonsterEmoteState..".")
+		if(verbose==1) then
+			DerpyPrint("Monster Emote is now "..MonsterEmoteState..".")
+		end
 	elseif(which=="PartyAchievement") then
 		if(PartyAchievementState == "ON") then
 			PartyAchievementState = "OFF"
 		else
 			PartyAchievementState = "ON"
 		end
-		DerpyPrint("Party Achievement is now "..PartyAchievementState..".")
+		if(verbose==1) then
+			DerpyPrint("Party Achievement is now "..PartyAchievementState..".")
+		end
 	end
 end
 
@@ -726,9 +759,9 @@ function AutoPurgeHandler(message)
 		GlobalAutoPurgeItems = {}
 		DerpyPrint("Global AutoPurge list cleared.")
 	elseif(starts_with(inputString, "autopurge verbose")) then
-		togglePassive("AutoPurgeVerbose")
+		togglePassive("AutoPurgeVerbose", 1)
 	elseif(starts_with(inputString, "autopurge toggle")) then
-		togglePassive("AutoPurge")
+		togglePassive("AutoPurge", 1)
 	elseif(starts_with(inputString, "autopurge guide")) then
 		DerpyPrint("IMPORTANT NOTES FOR AUTOPURGE:")
 		DerpyPrint(highlight("*").." It is |cFFFF0000IMPOSSIBLE TO UNDELETE ITEMS|r purged this way! You have been warned!")
@@ -1016,4 +1049,227 @@ function HigherLearningWaypoints() -- Set up Higher Learning waypoints on map
 	else
 		DerpyPrint("You must have "..highlight("TomTom").." installed and enabled to use this function.")
 	end
+end
+
+-- Options window functions
+function DerpyOptions_OnLoad()
+	DerpyOptionsFrame:RegisterEvent("ADDON_LOADED")
+end
+
+function DerpyOptions_OnEvent(self, event, ...) -- Event handler
+	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
+	if(event=="ADDON_LOADED") then
+		if(arg1=="Derpy") then
+			if PartyAchievementState == "ON" then
+				DerpyCheckBoxPartyAchievement:SetChecked(true)
+			end
+			if MonsterEmoteState == "ON" then
+				DerpyCheckBoxMonsterEmote:SetChecked(true)
+			end
+			if GuildDingState == "ON" then
+				DerpyCheckBoxGuildDing:SetChecked(true)
+			end
+			if FullyRestedState == "ON" then
+				DerpyCheckBoxRestedNotifier:SetChecked(true)
+			end
+			if RepTrackState == "ON" then
+				DerpyCheckBoxRepTrack:SetChecked(true)
+			end
+			if RepAnnounceState == "ON" then
+				DerpyCheckBoxRepAnnounce:SetChecked(true)
+			end
+			if RepCalcState == "ON" then
+				DerpyCheckBoxRepCalc:SetChecked(true)
+			end
+			if AntiShitterState == "ON" then
+				DerpyCheckBoxAntiShitter:SetChecked(true)
+			end
+			if SetRescueState == "ON" then
+				DerpyCheckBoxSetRescue:SetChecked(true)
+			end
+			if iLvLUpdateState == "ON" then
+				DerpyCheckBoxiLvLUpdate:SetChecked(true)
+			end
+			if InnervateState == "ON" then
+				DerpyCheckBoxInnervateNotifier:SetChecked(true)
+			end
+			if SpiderBurritoState == "ON" then
+				DerpyCheckBoxSpiderBurrito:SetChecked(true)
+			end
+			if AutoPurgeState == "ON" then
+				DerpyCheckBoxAutoPurge:SetChecked(true)
+			end
+		end
+	end
+end
+
+function DerpyOptionsFrameCloseButton_OnClick()
+	DerpyOptionsFrame:Hide()
+end
+
+function DerpyCheckBoxAntiShitter_OnClick()
+	togglePassive("AntiShitter", 0)
+end
+
+function DerpyCheckBoxGuildDing_OnClick()
+	togglePassive("GuildDing", 0)
+end
+
+function DerpyCheckBoxInnervateNotifier_OnClick()
+	togglePassive("Innervate", 0)
+end
+
+function DerpyCheckBoxPartyAchievement_OnClick()
+	togglePassive("PartyAchievement", 0)
+end
+
+function DerpyCheckBoxRepAnnounce_OnClick()
+	togglePassive("RepAnnounce", 0)
+end
+
+function DerpyCheckBoxRestedNotifier_OnClick()
+	togglePassive("FullyRested", 0)
+end
+
+function DerpyCheckBoxSetRescue_OnClick()
+	togglePassive("SetRescue", 0)
+end
+
+function DerpyCheckBoxiLvLUpdate_OnClick()
+	togglePassive("iLvLUpdate", 0)
+end
+
+function DerpyCheckBoxAutoPurge_OnClick()
+	togglePassive("AutoPurge", 0)
+end
+
+function DerpyCheckBoxMonsterEmote_OnClick()
+	togglePassive("MonsterEmote", 0)
+end
+
+function DerpyCheckBoxRepTrack_OnClick()
+	togglePassive("RepTrack", 0)
+end
+
+function DerpyCheckBoxRepCalc_OnClick()
+	togglePassive("RepCalc", 0)
+end
+
+function DerpyCheckBoxSpiderBurrito_OnClick()
+	togglePassive("SpiderBurrito", 0)
+end
+
+
+function DerpyButtonAutoPurgeAddItem_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeAddItem"] = {
+		text = "Please enter the name of the item you would like to add to your AutoPurge list:",
+		button1 = "Add item",
+		button2 = "Cancel",
+		hasEditBox = true,
+		timeout = 0,
+		enterClicksFirstButton = true,
+		whileDead = true,
+		hideOnEscape = true,
+		OnAccept = function(self)
+		  AutoPurgeHandler("autopurge add "..strlower(trim(self.editBox:GetText())))
+		end
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeAddItem")
+end
+
+function DerpyButtonAutoPurgeRemoveItem_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeRemoveItem"] = {
+		text = "Please enter the name of the item you would like to remove from your AutoPurge list:",
+		button1 = "Remove item",
+		button2 = "Cancel",
+		hasEditBox = true,
+		timeout = 0,
+		enterClicksFirstButton = true,
+		whileDead = true,
+		hideOnEscape = true,
+		OnAccept = function(self)
+		  AutoPurgeHandler("autopurge remove "..strlower(trim(self.editBox:GetText())))
+		end
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeRemoveItem")
+end
+
+function DerpyButtonAutoPurgeListItems_OnClick()
+	AutoPurgeHandler("autopurge list")
+end
+
+function DerpyButtonAutoPurgeClearItems_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeClearItems"] = {
+		text = "Are you sure you want to clear your character specific AutoPurge list? This action cannot be undone!",
+		button1 = "Yes",
+		button2 = "No",
+		OnAccept = function()
+		  AutoPurgeHandler("autopurge clear")
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeClearItems")
+end
+
+function DerpyButtonAutoPurgeGlobalAddItem_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeGlobalAddItem"] = {
+		text = "Please enter the name of the item you would like to add to the global AutoPurge list:",
+		button1 = "Add item",
+		button2 = "Cancel",
+		hasEditBox = true,
+		timeout = 0,
+		enterClicksFirstButton = true,
+		whileDead = true,
+		hideOnEscape = true,
+		OnAccept = function(self)
+		  AutoPurgeHandler("autopurge gadd "..strlower(trim(self.editBox:GetText())))
+		end
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeGlobalAddItem")
+end
+
+function DerpyButtonAutoPurgeGlobalRemoveItem_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeGlobalRemoveItem"] = {
+		text = "Enter the name of the item you would like to remove from the global AutoPurge list:",
+		button1 = "Remove item",
+		button2 = "Cancel",
+		hasEditBox = true,
+		timeout = 0,
+		enterClicksFirstButton = true,
+		whileDead = true,
+		hideOnEscape = true,
+		OnAccept = function(self)
+		  AutoPurgeHandler("autopurge gremove "..strlower(trim(self.editBox:GetText())))
+		end
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeGlobalRemoveItem")
+end
+
+function DerpyButtonAutoPurgeGlobalListItems_OnClick()
+	AutoPurgeHandler("autopurge glist")
+end
+
+function DerpyButtonAutoPurgeGlobalClearItems_OnClick()
+	StaticPopupDialogs["DerpyAutoPurgeGlobalClearItems"] = {
+		text = "Are you sure you want to clear your global AutoPurge list? This action cannot be undone!",
+		button1 = "Yes",
+		button2 = "No",
+		OnAccept = function()
+		  AutoPurgeHandler("autopurge gclear")
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3
+	}
+	
+	StaticPopup_Show("DerpyAutoPurgeGlobalClearItems")
 end

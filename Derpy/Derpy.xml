@@ -1,14 +1,468 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/" 
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
- xsi:schemaLocation="http://www.blizzard.com/wow/ui/ 
- ..\..\FrameXML\UI.xsd">
-<Script File="Derpy.lua"/> 
-	<Frame name="DerpyFrame"> 
-		<Scripts> 
-			<OnLoad> 
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.blizzard.com/wow/ui/   ..\..\FrameXML\UI.xsd" xmlns="http://www.blizzard.com/wow/ui/">
+	<Script File="Derpy.lua" />
+	<Frame name="DerpyFrame">
+		<Scripts>
+			<OnLoad>
 				Derpy_OnLoad();
 			</OnLoad>
-			<OnEvent function="Derpy_OnEvent"/>
+			<OnEvent function="Derpy_OnEvent">
+
+			</OnEvent>
+		</Scripts>
+	</Frame>
+	<Frame name="DerpyOptionsFrame" parent="UIParent" toplevel="true" enableMouse="true">
+		<Size x="735" y="542" />
+		<Anchors>
+			<Anchor point="CENTER" x="-11" y="52" />
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="DerpyOptionsFrameHeadline" inherits="BossEmoteNormalHuge" text="Derpy">
+					<Size x="699" y="48" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="18" y="-19" />
+					</Anchors>
+					<FontHeight val="20" />
+				</FontString>
+				<FontString inherits="GameFontNormalLarge" text="Toggle passive automatic functions">
+					<Size x="696" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-73" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="AntiShitter" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-105" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="AutoPurge" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="401" y="-104" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="iLvLUpdate" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-190" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Innervate Notifier" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-233" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Monster Emote" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-331" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="PartyAchievement" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-282" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="RepTrack" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="401" y="-331" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="RepAnnounce" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="401" y="-282" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="RepCalc" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="401" y="-380" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Rested Notifier" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-380" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="SpiderBurrito" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="401" y="-429" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="SetRescue" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-429" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Notifies you if there's an ignored player in your party/raid" justifyV="TOP" justifyH="LEFT">
+					<Size x="336" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-126" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Allows you to maintain a list of items to be automatically purged from your bags" justifyV="TOP" justifyH="LEFT">
+					<Size x="351" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-126" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Lets your guild know when you level up!" justifyV="TOP" justifyH="LEFT">
+					<Size x="336" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-169" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Notify you when your average equipped item level changes" justifyV="TOP" justifyH="LEFT">
+					<Size x="336" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-212" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Guild Ding Notifier" justifyH="LEFT">
+					<Size x="159" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="56" y="-147" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Sends a whisper to the receiving target when you cast Innervate on them" justifyV="TOP" justifyH="LEFT">
+					<Size x="333" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-255" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Emphasizes monster emotes such as &quot;Murloc runs away in fear!&quot;, by displaying them in the top error frame" justifyV="TOP" justifyH="LEFT">
+					<Size x="333" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-353" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Posts a notification about your gained achievements to the party chat, for grouping with guild outsiders" justifyV="TOP" justifyH="LEFT">
+					<Size x="333" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-304" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Changes your currently watched faction (&quot;display as bar&quot;) whenever you gain reputation" justifyV="TOP" justifyH="LEFT">
+					<Size x="351" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-353" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Shows you a discreet notification window and plays a non-intrusive sound whenever your standing with a faction changes" justifyV="TOP" justifyH="LEFT">
+					<Size x="351" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-304" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Shows your progress to the next reputation level whenever you gain reputation with a non-Exalted faction" justifyV="TOP" justifyH="LEFT">
+					<Size x="351" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-402" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Notifies you when entering or leaving a resting area, showing how much rested XP you've accumulated, if any" justifyV="TOP" justifyH="LEFT">
+					<Size x="333" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-402" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Notifies nearby players when you are afflicted by Web Wrap" justifyV="TOP" justifyH="LEFT">
+					<Size x="351" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-451" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Automatically buys back items part of an equipment set if sold to a vendor" justifyV="TOP" justifyH="LEFT">
+					<Size x="333" y="26" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="21" y="-451" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Character specific AutoPurge list:">
+					<Size x="351" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-161" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlightExtraSmall" text="Global AutoPurge list:">
+					<Size x="351" y="20" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="366" y="-205" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="DerpyOptionsFrameCloseButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size x="75" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="642" y="-503" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyOptionsFrameCloseButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<CheckButton name="DerpyCheckBoxAntiShitter" inherits="UICheckButtonTemplate" text="CheckButton1">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-99" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxAntiShitter_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxAutoPurge" inherits="UICheckButtonTemplate" text="CheckButton2">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-99" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxAutoPurge_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxGuildDing" inherits="UICheckButtonTemplate" text="CheckButton3">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-142" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxGuildDing_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxiLvLUpdate" inherits="UICheckButtonTemplate" text="CheckButton4">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-185" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxiLvLUpdate_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxInnervateNotifier" inherits="UICheckButtonTemplate" text="CheckButton5">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-228" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxInnervateNotifier_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxMonsterEmote" inherits="UICheckButtonTemplate" text="CheckButton6">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-326" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxMonsterEmote_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxPartyAchievement" inherits="UICheckButtonTemplate" text="CheckButton7">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-277" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxPartyAchievement_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxRepTrack" inherits="UICheckButtonTemplate" text="CheckButton8">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-326" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxRepTrack_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxRepAnnounce" inherits="UICheckButtonTemplate" text="CheckButton9">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-277" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxRepAnnounce_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxRepCalc" inherits="UICheckButtonTemplate" text="CheckButton10">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-375" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxRepCalc_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxRestedNotifier" inherits="UICheckButtonTemplate" text="CheckButton11">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-375" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxRestedNotifier_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxSpiderBurrito" inherits="UICheckButtonTemplate" text="CheckButton12">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-424" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxSpiderBurrito_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="DerpyCheckBoxSetRescue" inherits="UICheckButtonTemplate" text="CheckButton13">
+				<Size x="32" y="32" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-424" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyCheckBoxSetRescue_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<Button name="DerpyButtonAutoPurgeAddItem" inherits="UIPanelButtonTemplate" text="Add item">
+				<Size x="75" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-177" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeAddItem_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeRemoveItem" inherits="UIPanelButtonTemplate" text="Remove item">
+				<Size x="88" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="444" y="-177" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeRemoveItem_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeListItems" inherits="UIPanelButtonTemplate" text="List items">
+				<Size x="75" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="538" y="-177" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeListItems_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeClearItems" inherits="UIPanelButtonTemplate" text="Clear list">
+				<Size x="89" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="619" y="-177" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeClearItems_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeGlobalClearItems" inherits="UIPanelButtonTemplate" text="Clear list">
+				<Size x="89" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="619" y="-221" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeGlobalClearItems_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeGlobalListItems" inherits="UIPanelButtonTemplate" text="List items">
+				<Size x="75" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="538" y="-221" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeGlobalListItems_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeGlobalRemoveItem" inherits="UIPanelButtonTemplate2" text="Remove item">
+				<Size x="88" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="444" y="-221" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeGlobalRemoveItem_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="DerpyButtonAutoPurgeGlobalAddItem" inherits="UIPanelButtonTemplate" text="Add item">
+				<Size x="75" y="23" />
+				<Anchors>
+					<Anchor point="TOPLEFT" x="363" y="-221" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						DerpyButtonAutoPurgeGlobalAddItem_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				tinsert(UISpecialFrames, self:GetName())
+				DerpyOptions_OnLoad()
+			</OnLoad>
+			<OnEvent function="DerpyOptions_OnEvent">
+
+			</OnEvent>
 		</Scripts>
 	</Frame>
 </Ui>
