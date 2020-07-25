@@ -289,7 +289,9 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		else
 			AntiShitterState = "ON"
 		end
-		DerpyPrint("AntiShitter is now "..AntiShitterState..".")
+		if(verbose==1) then
+			DerpyPrint("AntiShitter is now "..AntiShitterState..".")
+		end
 	elseif(which=="SetRescue") then
 		if(SetRescueState == "ON") then
 			SetRescueState = "OFF"
@@ -1104,6 +1106,7 @@ function DerpyOptions_OnEvent(self, event, ...) -- Event handler
 end
 
 function DerpyOptionsFrameCloseButton_OnClick()
+	PlaySound("GAMEDIALOGCLOSE","master")
 	DerpyOptionsFrame:Hide()
 end
 
