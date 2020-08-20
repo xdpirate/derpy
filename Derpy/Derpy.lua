@@ -409,37 +409,38 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 		
 	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
-		if(difftime(time(), antiShitterLastTimestamp) > 29) then -- Avoids notifying more often than every 30 seconds
-			-- Build refreshed table of ignored players
-			local ignoredPlayers = {} 
-			local numIgnored = GetNumIgnores() 
-			for i = 1, numIgnored, 1 do 
-				table.insert(ignoredPlayers, GetIgnoreName(i))
-			end
-		
-			if(GetNumRaidMembers() > 0) then
-				local raidMembers = GetNumRaidMembers()
-				
-				for i = 1, raidMembers, 1 do
-					if(has_value(ignoredPlayers, UnitName("raid"..i))) then
-						-- freak out
-						DerpyPrint("Ignored player "..highlight(UnitName("raid"..i)).." detected in your raid group!")
-						antiShitterLastTimestamp = time() -- Record timestamp of last notification
-					end
+		if(AntiShitterState~="OFF") then
+			if(difftime(time(), antiShitterLastTimestamp) > 29) then -- Avoids notifying more often than every 30 seconds
+				-- Build refreshed table of ignored players
+				local ignoredPlayers = {} 
+				local numIgnored = GetNumIgnores() 
+				for i = 1, numIgnored, 1 do 
+					table.insert(ignoredPlayers, GetIgnoreName(i))
 				end
-			elseif(GetNumPartyMembers() > 0) then
-				local partyMembers = GetNumPartyMembers()
-				
-				for i = 1, partyMembers, 1 do
-					if(has_value(ignoredPlayers, UnitName("party"..i))) then
-						-- freak out
-						DerpyPrint("Ignored player "..highlight(UnitName("party"..i)).." detected in your party!")
-						antiShitterLastTimestamp = time() -- Record timestamp of last notification
+			
+				if(GetNumRaidMembers() > 0) then
+					local raidMembers = GetNumRaidMembers()
+					
+					for i = 1, raidMembers, 1 do
+						if(has_value(ignoredPlayers, UnitName("raid"..i))) then
+							-- freak out
+							DerpyPrint("Ignored player "..highlight(UnitName("raid"..i)).." detected in your raid group!")
+							antiShitterLastTimestamp = time() -- Record timestamp of last notification
+						end
+					end
+				elseif(GetNumPartyMembers() > 0) then
+					local partyMembers = GetNumPartyMembers()
+					
+					for i = 1, partyMembers, 1 do
+						if(has_value(ignoredPlayers, UnitName("party"..i))) then
+							-- freak out
+							DerpyPrint("Ignored player "..highlight(UnitName("party"..i)).." detected in your party!")
+							antiShitterLastTimestamp = time() -- Record timestamp of last notification
+						end
 					end
 				end
 			end
 		end
-
 	elseif(event=="PLAYER_EQUIPMENT_CHANGED") then -- iLvLUpdate
 		if(iLvLUpdateState~="OFF") then
 			local newItemLevel = math.floor(select(2, GetAverageItemLevel()))
@@ -700,8 +701,18 @@ function AutoPurgeHandler(message)
 		local item = trim(string.sub(inputString, 14))
 		
 		if(item == nil or item == "") then
-			DerpyPrint("Please specify a valid item name.")
+			DerpyPrint("Please specify a valid item name or item link")
 			DerpyPrint("For example: "..highlight("/derp autopurge add stormwind brie"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(AutoPurgeItems, itemName)) then
+				DerpyPrint("\""..itemName.."\" is already in the autopurge list!")
+			else
+				table.insert(AutoPurgeItems, itemName)
+				DerpyPrint("Added \""..itemName.."\" to the autopurge list!")
+			end
 		else
 			if(has_value(AutoPurgeItems, item)) then
 				DerpyPrint("\""..item.."\" is already in the autopurge list!")
@@ -716,6 +727,16 @@ function AutoPurgeHandler(message)
 		if(item == nil or item == "") then
 			DerpyPrint("Please specify a valid item name.")
 			DerpyPrint("For example: "..highlight("/derp autopurge gadd stormwind brie"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(GlobalAutoPurgeItems, itemName)) then
+				DerpyPrint("\""..itemName.."\" is already in the autopurge list!")
+			else
+				table.insert(GlobalAutoPurgeItems, itemName)
+				DerpyPrint("Added \""..itemName.."\" to the autopurge list!")
+			end
 		else
 			if(has_value(GlobalAutoPurgeItems, item)) then
 				DerpyPrint("\""..item.."\" is already in the global autopurge list!")
@@ -730,6 +751,17 @@ function AutoPurgeHandler(message)
 		if(item == nil or item == "") then
 			DerpyPrint("Please specify a valid item name.")
 			DerpyPrint("For example: "..highlight("/derp autopurge remove sweet nectar"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(AutoPurgeItems, itemName)) then
+				local itemIndex = table_index(AutoPurgeItems, itemName)
+				table.remove(AutoPurgeItems, itemIndex)
+				DerpyPrint("Removed \""..itemName.."\" from the autopurge list!")
+			else
+				DerpyPrint("\""..itemName.."\" was not found in the autopurge list!")
+			end
 		else
 			if(has_value(AutoPurgeItems, item)) then
 				local itemIndex = table_index(AutoPurgeItems, item)
@@ -745,6 +777,17 @@ function AutoPurgeHandler(message)
 		if(item == nil or item == "") then
 			DerpyPrint("Please specify a valid item name.")
 			DerpyPrint("For example: "..highlight("/derp autopurge gremove sweet nectar"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(GlobalAutoPurgeItems, itemName)) then
+				local itemIndex = table_index(GlobalAutoPurgeItems, itemName)
+				table.remove(GlobalAutoPurgeItems, itemIndex)
+				DerpyPrint("Removed \""..itemName.."\" from the autopurge list!")
+			else
+				DerpyPrint("\""..itemName.."\" was not found in the autopurge list!")
+			end
 		else
 			if(has_value(GlobalAutoPurgeItems, item)) then
 				local itemIndex = table_index(GlobalAutoPurgeItems, item)
@@ -769,7 +812,7 @@ function AutoPurgeHandler(message)
 		DerpyPrint(highlight("*").." It is |cFFFF0000IMPOSSIBLE TO UNDELETE ITEMS|r purged this way! You have been warned!")
 		DerpyPrint(highlight("*").." AutoPurge's on/off state and the regular autopurge item list are saved on a per-character basis.")
 		DerpyPrint(highlight("*").." The global autopurge list applies to all characters on your account.")
-		DerpyPrint(highlight("*").." Items are added by NAME, not by LINK!")
+		DerpyPrint(highlight("*").." Items are added by name or by item link.")
 		DerpyPrint(highlight("*").." The character case of the item name to be added or removed doesn't matter.")
 		DerpyPrint(highlight("*").." Autopurging will not happen while you are in combat.")
 		DerpyPrint(highlight("*").." If you loot autopurged items in combat, they will be purged the next time your bags are updated.")
@@ -919,7 +962,7 @@ function PurgeGrayItems(dryRun) -- Delete all gray items from bags
 			
 			StaticPopup_Show("ConfirmDeleteAllGrayItems")
 		else
-				DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+			DerpyPrint("Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
 		end
 	else
 		DerpyPrint("You have no gray items in your bags.")
