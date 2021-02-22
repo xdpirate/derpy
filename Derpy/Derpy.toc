@@ -1,11 +1,11 @@
-## Interface: 40300
+## Interface: 24300
 ## Title-enGB: Derpy
-## Author: Cursetits of Apollo 2
-## Version: 2.2
+## Author: Cursetits of Apollo 2 / Noaide of Karazhan
+## Version: v2.4-TBC
 ## Notes: Hurr durr herp derp
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems, SpiderBurritoState, AntiShitterState, SetRescueState, iLvLUpdateState, RepCalcState
+##SavedVariables: GuildDingState, FullyRestedState, MonsterEmoteState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems,  AntiShitterState, RepCalcState
 ##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose, AutoPurgeGrayState, AutoPurgeGrayValue
 Derpy.lua
 Derpy.xml

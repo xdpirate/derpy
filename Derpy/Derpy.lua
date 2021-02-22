@@ -9,12 +9,10 @@
 local color = "|cFF66EE66" -- We like green
 local highlightColor = "|cFF9BFF00"
 local original = "|r"
-local CurrentLevelCap = 85 -- With lack of a function to retrieve this dynamically...
+local CurrentLevelCap = 70 -- With lack of a function to retrieve this dynamically...
 local repTrackLastTimestamp = time()
 local antiShitterLastTimestamp = time()
 local lastInnervateMessageTime = nil
-local lastWebWrapMessageTime = nil
-local lastAvgItemLevel = nil
 
 local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
 
@@ -35,22 +33,19 @@ end
 
 function Derpy_OnLoad() -- Addon loaded
 	SLASH_DERPY1, SLASH_DERPY2, SLASH_DERPY3 = '/derp', '/derpy', '/dr'
-	DerpyPrint("v2.4-Cata loaded (/derpy, /derp, /dr)")
+	DerpyPrint("v2.4-TBC loaded (/derpy, /derp, /dr)")
 	
 	DerpyFrame:RegisterEvent("ADDON_LOADED") -- So we can detect user preferences
-	DerpyFrame:RegisterEvent("ACHIEVEMENT_EARNED") -- For Party Achievement function
 	DerpyFrame:RegisterEvent("PLAYER_LEVEL_UP") -- For Guild Ding function
 	DerpyFrame:RegisterEvent("PLAYER_UPDATE_RESTING") -- For Rested function
 	DerpyFrame:RegisterEvent("CHAT_MSG_MONSTER_EMOTE") -- For Monster Emote function
 	DerpyFrame:RegisterEvent("COMBAT_TEXT_UPDATE") -- For RepTrack and RepCalc functions
 	DerpyFrame:RegisterEvent("CHAT_MSG_SYSTEM") -- For RepAnnounce function
-	DerpyFrame:RegisterEvent("UNIT_AURA") -- For Innervate and SpiderBurrito function
 	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge
 	DerpyFrame:RegisterEvent("PARTY_MEMBERS_CHANGED") -- For AntiShitter
 	DerpyFrame:RegisterEvent("RAID_ROSTER_UPDATE") -- For AntiShitter
-	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
-	DerpyFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- For iLvLUpdate	
-	DerpyFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- For iLvLUpdate	to get accurate average item level upon login
+	
+	DerpyFrame:SetScript("OnEvent", Derpy_OnEvent)
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -80,12 +75,6 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		DerpyPrint("durr") -- derp
 	elseif(starts_with(message, "autopurge")) then
 		AutoPurgeHandler(message)
-	elseif(message == "options") then
-		if(DerpyOptionsFrame:IsShown()) then
-			DerpyOptionsFrame:Hide()
-		else
-			DerpyOptionsFrame:Show()
-		end
 	elseif(message == "tf") then
 		DerpyPrint("\124cffff8000\124Hitem:19019:0:0:0:0:0:0:0:0\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
 	elseif(message == "bagworth") then
@@ -94,22 +83,12 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		PurgeLowestValueGray()
 	elseif(message == "gray" or message == "grey") then
 		PurgeGrayItems(true)
-	elseif(message == "bookclub") then
-		HigherLearningWaypoints()
-    elseif(message == "pet") then
-		RandomPet(0)
-    elseif(message == "spet") then
-		RandomPet(1)
     elseif(message == "shitstorm") then
 		DerpyPrint("\124cffa335ee\124Hitem:23555:0:0:0:0:0:0:0:0\124h[Dirge]\124h\124r")
-	elseif(message == "partyachi") then
-		togglePassive("PartyAchievement", 1)
 	elseif(message == "rested") then
 		togglePassive("FullyRested", 1)
 	elseif(message == "monster") then
 		togglePassive("MonsterEmote", 1)
-	elseif(starts_with(message, "pony")) then
-		PonyTime(message)
 	elseif(message == "gding") then
 		togglePassive("GuildDing", 1)
     elseif(message == "repa") then
@@ -120,22 +99,14 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("RepTrack", 1)
     elseif(message == "ivt" or message == "innervate") then
 		togglePassive("Innervate", 1)
-    elseif(message == "sb" or message == "spiderburrito") then
-		togglePassive("SpiderBurrito", 1)
     elseif(message == "antishitter") then
 		togglePassive("AntiShitter", 1)
-    elseif(message == "setrescue") then
-		togglePassive("SetRescue", 1)
-    elseif(message == "ilvlupdate") then
-		togglePassive("iLvLUpdate", 1)
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
 		DisbandRaid()
-    elseif(message == "speed") then
-		DerpyPrint("Current speed: "..string.format("%d", (GetUnitSpeed("Player") / 7) * 100).."%")
     elseif(message == "about") then
-        DerpyPrint("was made by Cursetits/Poodle of Apollo 2, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on private servers.")
+        DerpyPrint("was made by Noaide of Atlantiss-Karazhan, formerly Derpderpderp/Noaide of Ragnaros EU. The author is the same person, but I now play on private servers.")
 	elseif(message == "" or message == nil or message == " ") then
 		ShowUsage()
 	else
@@ -172,7 +143,7 @@ function trim(s)
 end
 
 function DerpyPrint(msg) -- Print a chat frame message in Derpy format
-	print(color.."[Derpy]"..original.." "..msg)
+	DEFAULT_CHAT_FRAME:AddMessage(color.."[Derpy]"..original.." "..msg)
 end
 
 function highlight(msg) -- Highlight a piece of text
@@ -190,12 +161,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
-	DerpyPrint(highlight("pony [raid|party]").." -- Tattle on who has \124cff71d5ff\124Hspell:32223\124h[Crusader Aura]\124h\124r enabled")
-	DerpyPrint(highlight("speed").." -- Calculates and outputs your current speed")
-	DerpyPrint(highlight("bookclub").." -- Add TomTom waypoints for "..GetAchievementLink(1956).." to map")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
-	DerpyPrint(highlight("pet").." -- Summon a random companion pet "..highlight("with").." snazzy summoning dialogue")
-	DerpyPrint(highlight("spet").." -- Summon a random companion pet "..highlight("without").." the snazzy summoning dialogue")
 	DerpyPrint(highlight("dr/disband").." -- Disband a raid group you are the leader of")
 	DerpyPrint(highlight("about").." -- Show information on who made this addon")
 end
@@ -205,7 +171,6 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint("(/derp can be substituted for /dr or /derpy)")
 	DerpyPrint("Toggle passive features:"..original)
 	DerpyPrint(highlight("autopurge").." -- (Submenu) Automatically purge specified items (Currently "..highlight(AutoPurgeState)..")")
-	DerpyPrint(highlight("partyachi").." -- Toggle Party Achievement notification (Currently "..highlight(PartyAchievementState)..")")
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
 	DerpyPrint(highlight("monster").." -- Toggle emphasis of monster emotes in error frame (Currently "..highlight(MonsterEmoteState)..")")
@@ -213,10 +178,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint(highlight("repa").." -- Toggle announce window when your faction standing changes (Currently "..highlight(RepAnnounceState)..")")
 	DerpyPrint(highlight("repc").." -- Toggle showing you progress to the next reputation level whenever you gain rep (Currently "..highlight(RepCalcState)..")")
 	DerpyPrint(highlight("antishitter").." -- Toggle notification when you join a party/raid with an ignored player (Currently "..highlight(AntiShitterState)..")")
-	DerpyPrint(highlight("setrescue").." -- Toggle automatic buyback of equipment set items when at a vendor (Currently "..highlight(SetRescueState)..")")
-	DerpyPrint(highlight("ilvlupdate").." -- Toggle notifying when your average item level changes (Currently "..highlight(iLvLUpdateState)..")")
 	DerpyPrint(highlight("innervate/ivt").." -- Toggle sending a whisper to the person you cast \124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on (Currently "..highlight(InnervateState)..")")
-	DerpyPrint(highlight("sb/spiderburrito").." -- Toggle notifying people when you are \124cff71d5ff\124Hspell:52086\124h[Web Wrap]\124h\124rped (Currently "..highlight(SpiderBurritoState)..")")
 end
 
 function togglePassive(which, verbose) -- Toggle passive functions on/off
@@ -265,7 +227,7 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		else
 			AutoPurgeGrayState = "ON"
 			if(verbose==1) then
-				DerpyPrint(highlight("AutoPurge_Gray").." is now "..AutoPurgeGrayState..". Items worth less than "..GetCoinTextureString(AutoPurgeGrayValue).." will be autopurged. You can change this value using "..highlight("/dr autopurge gray XX")..", where "..highlight("XX").." is replaced with the value treshold expressed in copper (for example, '10000' is "..GetCoinTextureString(10000).." and '5000' is "..GetCoinTextureString(5000)..").")
+				DerpyPrint(highlight("AutoPurge_Gray").." is now "..AutoPurgeGrayState..". Items worth less than "..GetCoinString(AutoPurgeGrayValue).." will be autopurged. You can change this value using "..highlight("/dr autopurge gray XX")..", where "..highlight("XX").." is replaced with the value treshold expressed in copper (for example, '10000' is "..GetCoinString(10000).." and '5000' is "..GetCoinString(5000)..").")
 			end
 		end
 	elseif(which=="AutoPurgeVerbose") then
@@ -286,15 +248,6 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		if(verbose==1) then
 			DerpyPrint(highlight("Innervate whispers").." are now "..InnervateState..".")
 		end
-	elseif(which=="SpiderBurrito") then
-		if(SpiderBurritoState == "ON") then
-			SpiderBurritoState = "OFF"
-		else
-			SpiderBurritoState = "ON"
-		end
-		if(verbose==1) then
-			DerpyPrint(highlight("SpiderBurrito").." is now "..SpiderBurritoState..".")
-		end
 	elseif(which=="AntiShitter") then
 		if(AntiShitterState == "ON") then
 			AntiShitterState = "OFF"
@@ -303,24 +256,6 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		end
 		if(verbose==1) then
 			DerpyPrint(highlight("AntiShitter").." is now "..AntiShitterState..".")
-		end
-	elseif(which=="SetRescue") then
-		if(SetRescueState == "ON") then
-			SetRescueState = "OFF"
-		else
-			SetRescueState = "ON"
-		end
-		if(verbose==1) then
-			DerpyPrint(highlight("SetRescue").." is now "..SetRescueState..".")
-		end
-	elseif(which=="iLvLUpdate") then
-		if(iLvLUpdateState == "ON") then
-			iLvLUpdateState = "OFF"
-		else
-			iLvLUpdateState = "ON"
-		end
-		if(verbose==1) then
-			DerpyPrint(highlight("iLvLUpdate").." is now "..iLvLUpdateState..".")
 		end
 	elseif(which=="GuildDing") then
 		if(GuildDingState == "ON") then
@@ -349,15 +284,6 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		if(verbose==1) then
 			DerpyPrint(highlight("Monster Emote").." is now "..MonsterEmoteState..".")
 		end
-	elseif(which=="PartyAchievement") then
-		if(PartyAchievementState == "ON") then
-			PartyAchievementState = "OFF"
-		else
-			PartyAchievementState = "ON"
-		end
-		if(verbose==1) then
-			DerpyPrint(highlight("Party Achievement").." is now "..PartyAchievementState..".")
-		end
 	end
 end
 
@@ -365,16 +291,11 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
 	if(event=="ADDON_LOADED") then
 		if(arg1=="Derpy") then
-			CombatTextSetActiveUnit("player") -- For RepTrack to work
-			
 			if(AutoPurgeItems == nil) then -- Initialize the autopurge item lists
 				AutoPurgeItems = {}
 			end
 			if(GlobalAutoPurgeItems == nil) then
 				GlobalAutoPurgeItems = {}
-			end
-			if PartyAchievementState == nil then
-				PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 			end
 			if MonsterEmoteState == nil then
 				MonsterEmoteState = "ON" -- Defaults to on, because it's useful
@@ -397,20 +318,12 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			if AntiShitterState == nil then
 				AntiShitterState = "ON" -- Defaults to on, because it's useful
 			end
-			if SetRescueState == nil then
-				SetRescueState = "ON" -- Defaults to on, because it's useful
-			end
-			if iLvLUpdateState == nil then
-				iLvLUpdateState = "OFF" -- Defaults to off, because it can be spammy
-			end
 			if InnervateState == nil then
 				InnervateState = "ON" -- Defaults to on, because it's useful
 			end
-			if SpiderBurritoState == nil then
-				SpiderBurritoState = "ON" -- Defaults to on, because it's useful
-			end
 			if AutoPurgeState == nil then
 				AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
+				DerpyPrint("AutoPurgeState = \"OFF\"")
 			end
 			if AutoPurgeGrayState == nil then
 				AutoPurgeGrayState = "OFF" -- Defaults to off, because it's dangerous
@@ -422,9 +335,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				AutoPurgeVerbose = "OFF" -- Defaults to off, because it's annoying
 			end
 		end
-		
-	elseif(event=="PLAYER_ENTERING_WORLD") then -- All data should be loaded, update last seen average itemlevel
-		lastAvgItemLevel = math.floor(select(2, GetAverageItemLevel()))
 		
 	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
 		if(AntiShitterState~="OFF") then
@@ -459,84 +369,11 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end
 			end
 		end
-	elseif(event=="PLAYER_EQUIPMENT_CHANGED") then -- iLvLUpdate
-		if(iLvLUpdateState~="OFF") then
-			local newItemLevel = math.floor(select(2, GetAverageItemLevel()))
-			if(lastAvgItemLevel ~= newItemLevel) then
-				if(lastAvgItemLevel ~= 0) then
-					local ilvlString = ""
-				
-					if(newItemLevel > lastAvgItemLevel) then
-						ilvlString = "|cFFFF0000"..lastAvgItemLevel.."|r -> |cFF00FF00"..newItemLevel.."|r"
-					else
-						ilvlString = "|cFF00FF00"..lastAvgItemLevel.."|r -> |cFFFF0000"..newItemLevel.."|r"
-					end
-					
-					DerpyPrint(highlight("iLvLUpdate: ").."Avg. equipped ilvl has changed: "..ilvlString)
-				end
-				lastAvgItemLevel = newItemLevel
-			end
-		end
-		
-	elseif(event=="MERCHANT_UPDATE") then -- SetRescue
-		if(SetRescueState~="OFF") then
-			local eqSetCount = GetNumEquipmentSets()
-				
-			for i = 1, eqSetCount, 1 do 
-				local eqSetName = GetEquipmentSetInfo(i)
-				local eqSetItems = GetEquipmentSetItemIDs(eqSetName)
-				for j = 1, 19 do
-					if eqSetItems[j] then
-						local eqSetItemName = (GetItemInfo(eqSetItems[j]))
-						if(eqSetItemName ~= nil) then
-							for k = 1, GetNumBuybackItems() do
-								local link = GetBuybackItemLink(k)
-
-								if link then
-									local buyBackItemName = (GetItemInfo(link:match("item:(%d+):")))
-									
-									if buyBackItemName == eqSetItemName then
-										BuybackItem(k)
-										DerpyPrint(highlight("SetRescue: ")..link.." is a part of the equipment set \""..eqSetName.."\", and has been automatically bought back from the vendor.")
-										return -- we no likey recursion
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
 		
 	elseif(event=="BAG_UPDATE") then -- AutoPurge
 		if(AutoPurgeState~="OFF") then
 			if(InCombatLockdown()==nil) then -- Do nothing in combat to avoid fuckery
 				DoAutoPurge()
-			end
-		end
-		
-	elseif(event=="UNIT_AURA") then
-		receivingUnit = arg1
-		
-		-- Innervate notifier
-		if(InnervateState~="OFF") then
-			_, _, _, _, _, _, _, unitCaster = UnitAura(receivingUnit, "Innervate")
-			if(unitCaster ~= nil and receivingUnit ~= nil and unitCaster == "player" and receivingUnit ~= unitCaster and UnitName(unitCaster) ~= UnitName(receivingUnit)) then
-				if(lastInnervateMessageTime == nil or time() - lastInnervateMessageTime > 10) then
-					lastInnervateMessageTime = time()
-					SendChatMessage("\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r on you!", "WHISPER", nil, GetUnitName(receivingUnit))
-				end
-			end
-		end
-		
-		-- Spider burrito notifier
-		if(SpiderBurritoState~="OFF") then
-			local name = UnitDebuff(receivingUnit, "Web Wrap") 
-			if(name ~= nil and receivingUnit == "player") then
-				if(lastWebWrapMessageTime == nil or time() - lastWebWrapMessageTime > 10) then
-					lastWebWrapMessageTime = time()
-					SendChatMessage("I am a spider burrito! Help me!", "SAY")
-				end
 			end
 		end
 		
@@ -562,17 +399,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 		
-	elseif(event=="ACHIEVEMENT_EARNED") then -- Party Achievement function
-		if(PartyAchievementState~="OFF") then
-			partyAchivementLink = GetAchievementLink(arg1)
-
-			if(GetNumPartyMembers() > 0) then
-				SendChatMessage(UnitName("player").." earned the achievement "..partyAchivementLink.."!", "PARTY", nil)
-			elseif(GetNumRaidMembers() > 0) then
-				SendChatMessage(UnitName("player").." earned the achievement "..partyAchivementLink.."!", "RAID", nil)
-			end
-		end
-		
 	elseif(event=="PLAYER_LEVEL_UP") then -- Guild Ding function
 		if(GuildDingState~="OFF") then
 			if(IsInGuild()==1) then
@@ -589,7 +415,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				if(newLevel ~= nil and factionName ~= nil) then
 					DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
 					UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
-					PlaySoundFile("Sound\\Spells\\DivineStormDamage1.wav", "master")
+					PlaySoundFile("Sound\\Spells\\AntiHoly.wav", "master")
 					
 					local t = 5
 					DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -657,31 +483,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 	end
 end
 
-function PonyTime(msg)
-	name, _, _, _, _, _, _, unitCaster = UnitBuff("player", "Crusader Aura")
-	if(name~=nil and unitCaster~=nil) then
-		if(msg == "pony") then
-			DerpyPrint(highlight("Pony: ")..UnitName(unitCaster) .. " has Crusader Aura on!")
-		elseif(msg == "pony raid") then
-			if(GetNumRaidMembers() > 0) then
-				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "RAID")
-			else
-				DerpyPrint(highlight("Pony: ").."You must be in a raid group to use Pony Raid.")
-			end
-		elseif(msg == "pony party") then
-			if(GetNumPartyMembers() > 0) then
-				SendChatMessage("[ "..UnitName(unitCaster) .. " has Crusader Aura on! ]", "PARTY")
-			else
-				DerpyPrint(highlight("Pony: ").."You must be in a party to use Pony Party.")
-			end
-		else
-			DerpyPrint(highlight("Pony: ").."Valid options for Pony are \"pony\", \"pony raid\", or \"pony party\"")
-		end
-	else
-		DerpyPrint(highlight("Pony: ").."Couldn't find any Crusader Aura.")
-	end
-end
-
 function AutoPurgeHandler(message)
 	local inputString = message
 	
@@ -698,7 +499,7 @@ function AutoPurgeHandler(message)
 				end
 			end
 		else
-			DerpyPrint(highlight("AutoPurge").."There are currently no items in the autopurge list for "..UnitName("player").."!")
+			DerpyPrint(highlight("AutoPurge: ").."There are currently no items in the autopurge list for "..UnitName("player").."!")
 		end		
 	elseif(starts_with(inputString, "autopurge glist")) then
 		local itemNo = 0
@@ -750,10 +551,10 @@ function AutoPurgeHandler(message)
 			itemName = strlower(itemName)
 			
 			if(has_value(GlobalAutoPurgeItems, itemName)) then
-				DerpyPrint(highlight("AutoPurge: ").."\""..itemName.."\" is already in the autopurge list!")
+				DerpyPrint(highlight("AutoPurge: ").."\""..itemName.."\" is already in the global autopurge list!")
 			else
 				table.insert(GlobalAutoPurgeItems, itemName)
-				DerpyPrint(highlight("AutoPurge: ").."Added \""..itemName.."\" to the autopurge list!")
+				DerpyPrint(highlight("AutoPurge: ").."Added \""..itemName.."\" to the global autopurge list!")
 			end
 		else
 			if(has_value(GlobalAutoPurgeItems, item)) then
@@ -832,24 +633,25 @@ function AutoPurgeHandler(message)
 			local num = tonumber(strmatch(message, "gray (%d+)"))
 			if(num ~= nil) then
 				if(num < 1) then
-					DerpyPrint(highlight("AutoPurge_Gray: ").."The minimum value for AutoPurge_Gray is 1 ("..GetCoinTextureString("1")..").")
+					DerpyPrint(highlight("AutoPurge_Gray: ").."The minimum value for AutoPurge_Gray is 1 ("..GetCoinString("1")..").")
 				elseif(num > 3750000) then
-					DerpyPrint(highlight("AutoPurge_Gray: ").."The maximum value for AutoPurge_Gray is 3750000 ("..GetCoinTextureString("3750000").."), as no gray items in the game are worth more.")
+					DerpyPrint(highlight("AutoPurge_Gray: ").."The maximum value for AutoPurge_Gray is 3750000 ("..GetCoinString("3750000").."), as no gray items in the game are worth more.")
 				else
 					AutoPurgeGrayValue = num
-					DerpyPrint(highlight("AutoPurge_Gray: ").."Items worth less than "..GetCoinTextureString(num).." will now be autopurged.") 
+					DerpyPrint(highlight("AutoPurge_Gray: ").."Items worth less than "..GetCoinString(num).." will now be autopurged.") 
 				end
 			else
-				DerpyPrint(highlight("AutoPurge_Gray: ")..num.." is not a valid value. Use "..highlight("/dr autopurge gray XX")..", where "..highlight("XX").." is replaced with the value treshold expressed in copper (for example, '10000' is "..GetCoinTextureString(10000).." and '5000' is "..GetCoinTextureString(5000)..").")
+				DerpyPrint(highlight("AutoPurge_Gray: ")..num.." is not a valid value. Use "..highlight("/dr autopurge gray XX")..", where "..highlight("XX").." is replaced with the value treshold expressed in copper (for example, '10000' is "..GetCoinString(10000).." and '5000' is "..GetCoinString(5000)..").")
 			end
 		end
 	
 	elseif(starts_with(inputString, "autopurge guide")) then
 		DerpyPrint("IMPORTANT NOTES FOR AUTOPURGE:")
 		DerpyPrint(highlight("*").." It is |cFFFF0000IMPOSSIBLE TO UNDELETE ITEMS|r purged this way! You have been warned!")
+		DerpyPrint(highlight("*").." AutoPurge for TBC requires the Informant addon, which is a part of the Auctioneer suite of addons.")
 		DerpyPrint(highlight("*").." AutoPurge's on/off state and the regular autopurge item list are saved on a per-character basis.")
 		DerpyPrint(highlight("*").." The global autopurge list applies to all characters on your account.")
-		DerpyPrint(highlight("*").." Items are added by name or by item link.")
+		DerpyPrint(highlight("*").." Items are added by name, or by item link.")
 		DerpyPrint(highlight("*").." The character case of the item name to be added or removed doesn't matter.")
 		DerpyPrint(highlight("*").." Autopurging will not happen while you are in combat.")
 		DerpyPrint(highlight("*").." If you loot autopurged items in combat, they will be purged the next time your bags are updated.")
@@ -866,7 +668,7 @@ function AutoPurgeHandler(message)
 		DerpyPrint(highlight("verbose").." -- Toggle verbose mode (Currently "..highlight(AutoPurgeVerbose)..")")
 		DerpyPrint(highlight("list").." -- List items currently being autopurged")
 		DerpyPrint(highlight("gray").." -- Toggle purging gray quality items based on vendor value (Currently "..highlight(AutoPurgeGrayState)..")")
-		DerpyPrint(highlight("gray XX").." -- Set minimum vendor value in copper for AutoPurge_Gray (Currently "..GetCoinTextureString(AutoPurgeGrayValue)..")")
+		DerpyPrint(highlight("gray XX").." -- Set minimum vendor value in copper for AutoPurge_Gray (Currently "..GetCoinString(AutoPurgeGrayValue)..")")
 		DerpyPrint(highlight("add item name").." -- Add the specified item to the autopurge list")
 		DerpyPrint(highlight("remove item name").." -- Remove the specified item from the autopurge list")
 		DerpyPrint(highlight("clear").." -- Remove ALL items from the autopurge list")
@@ -879,173 +681,214 @@ function AutoPurgeHandler(message)
 end
 
 function DoAutoPurge()
-	for bag=0,4 -- Searching all bags instead of only the updated one, in order to catch items collected in combat
-	do
-		for slot = 1,GetContainerNumSlots(bag) 
-		do 
-			local link = GetContainerItemLink(bag, slot)
-			
-			if link then
-				local itemName = GetItemInfo(link)
+	if(IsAddOnLoaded("Informant") == 1) then
+		for bag=0,4 -- Searching all bags instead of only the updated one, in order to catch items collected in combat
+		do
+			for slot = 1,GetContainerNumSlots(bag) 
+			do 
+				local link = GetContainerItemLink(bag, slot)
 				
-				if itemName ~= nil then
-					local itemInfo = {GetItemInfo(link)}
-					local itemName = strlower(select(1, unpack(itemInfo)))
-					local rarity = select(3, unpack(itemInfo))
+				if link then
+					local itemName = GetItemInfo(link)
 					
-					if(has_value(GlobalAutoPurgeItems, itemName)) then -- It's in the global autopurge list
-						PickupContainerItem(bag, slot)
-						DeleteCursorItem()
-						if(AutoPurgeVerbose=="ON") then
-							DerpyPrint(highlight("AutoPurge: ").."Purging \""..itemName.."\" because it's in the global AutoPurge list")
-						end
-					elseif(has_value(AutoPurgeItems, itemName)) then -- It's in the character specific autopurge list
-						PickupContainerItem(bag, slot)
-						DeleteCursorItem()
-						if(AutoPurgeVerbose=="ON") then
-							DerpyPrint(highlight("AutoPurge: ").."Purging \""..itemName.."\" because it's in "..UnitName("player").."'s AutoPurge list")
-						end
-					elseif(AutoPurgeGrayState~="OFF") then -- AutoPurge_Gray is enabled
-						if(rarity == 0) then -- It's a gray item
-							local itemSellPrice = select(11, unpack(itemInfo))
-							
-							if(itemSellPrice ~= nil and itemSellPrice ~= 0 and itemSellPrice < AutoPurgeGrayValue) then
+					if itemName ~= nil then
+						local itemInfo = {GetItemInfo(link)}
+						local itemName = strlower(select(1, unpack(itemInfo)))
+						local rarity = select(3, unpack(itemInfo))
+						local itemID = tonumber(link:match("item:(%d+):"))
+						local itemSellPrice = Informant.GetItem(itemID).sell
+						local done = false
+						
+						if(GlobalAutoPurgeItems ~= nil) then
+							if(has_value(GlobalAutoPurgeItems, itemName)) then -- It's in the global autopurge list
 								PickupContainerItem(bag, slot)
 								DeleteCursorItem()
-								
+								done = true
 								if(AutoPurgeVerbose=="ON") then
-									DerpyPrint(highlight("AutoPurge_Gray: ").."Purging \""..itemName.."\", because it is worth less than the current treshold ("..GetCoinTextureString(itemSellPrice).." is less than "..GetCoinTextureString(AutoPurgeGrayValue)..")")
+									DerpyPrint(highlight("AutoPurge: ").."Purging \""..itemName.."\" because it's in the global AutoPurge list")
+								end
+							end
+						end
+						
+						if(done == false) then
+							if(AutoPurgeItems ~= nil) then
+								if(has_value(AutoPurgeItems, itemName)) then -- It's in the character specific autopurge list
+									PickupContainerItem(bag, slot)
+									DeleteCursorItem()
+									done = true
+									if(AutoPurgeVerbose=="ON") then
+										DerpyPrint(highlight("AutoPurge: ").."Purging \""..itemName.."\" because it's in "..UnitName("player").."'s AutoPurge list")
+									end
+								end
+							end
+						end
+						
+						if(done == false) then
+							if(AutoPurgeGrayState~="OFF") then -- AutoPurge_Gray is enabled
+								if(rarity == 0) then -- It's a gray item
+									if(itemSellPrice ~= nil and itemSellPrice ~= 0 and itemSellPrice < AutoPurgeGrayValue) then
+										PickupContainerItem(bag, slot)
+										DeleteCursorItem()
+										
+										if(AutoPurgeVerbose=="ON") then
+											DerpyPrint(highlight("AutoPurge_Gray: ").."Purging \""..itemName.."\", because it is worth less than the current treshold ("..GetCoinString(itemSellPrice).." is less than "..GetCoinString(AutoPurgeGrayValue)..")")
+										end
+									end
 								end
 							end
 						end
 					end
-				end
-			end 
+				end 
+			end
 		end
 	end
 end
 
 function PurgeLowestValueGray()
-	grayCount = 0
-	lowValGold = 99999999
-	lowValBag = nil
-	lowValSlot = nil
-	lowValCount = nil
-	
-	for bag=0,4 
-	do 
-		for slot = 1,GetContainerNumSlots(bag) 
+	if(IsAddOnLoaded("Informant") == 1) then
+		grayCount = 0
+		lowValGold = 99999999
+		lowValBag = nil
+		lowValSlot = nil
+		lowValCount = nil
+		
+		for bag=0,4 
 		do 
-			link = GetContainerItemLink(bag, slot)
-			_, itemCount = GetContainerItemInfo(bag, slot)
-			
-			if link then
-				itemInfo = {GetItemInfo(link)}
-				rarity = select(3, unpack(itemInfo))
-				itemSellPrice = select(11, unpack(itemInfo))
+			for slot = 1,GetContainerNumSlots(bag) 
+			do 
+				link = GetContainerItemLink(bag, slot)
+				_, itemCount = GetContainerItemInfo(bag, slot)
 				
-				if (rarity == 0) then -- It's a gray item
-					grayCount = grayCount + 1
-					if itemSellPrice * itemCount < lowValGold then
-						lowValGold = itemSellPrice * itemCount
-						lowValBag = bag
-						lowValSlot = slot
-						lowValCount = itemCount
-					end
-				end
+				if link then
+					itemInfo = {GetItemInfo(link)}
+					rarity = select(3, unpack(itemInfo))
+					itemID = tonumber(link:match("item:(%d+):"))
+					itemSellPrice = Informant.GetItem(itemID).sell
+				
+					if(rarity == 0) then -- It's a gray item
+						if(itemSellPrice ~= nil) then
+							grayCount = grayCount + 1
+							if itemSellPrice * itemCount < lowValGold then
+								lowValGold = itemSellPrice * itemCount
+								lowValBag = bag
+								lowValSlot = slot
+								lowValCount = itemCount
+							end
+						end
+					end 					
+				end 
 			end 
-		end 
-	end
-	
-	if grayCount > 0 then
-		purgeLink = GetContainerItemLink(lowValBag, lowValSlot)
-		DerpyPrint(highlight("LowGray: ").."Purged lowest value gray item slot in your bag:")
-		DerpyPrint(purgeLink.." x"..lowValCount.." - Total value "..GetCoinTextureString(lowValGold))
-		PickupContainerItem(lowValBag, lowValSlot) 
-		DeleteCursorItem() 
+		end
+		
+		if grayCount > 0 then
+			purgeLink = GetContainerItemLink(lowValBag, lowValSlot)
+			DerpyPrint(highlight("LowGray: ").."Purged lowest value gray item slot in your bag:")
+			DerpyPrint(purgeLink.." x"..lowValCount.." - Total value "..GetCoinString(lowValGold))
+			PickupContainerItem(lowValBag, lowValSlot) 
+			DeleteCursorItem() 
+		else
+			DerpyPrint(highlight("LowGray: ").."There are no gray items in your bags.")
+		end
 	else
-		DerpyPrint(highlight("LowGray: ").."There are no gray items in your bags.")
-	end 
+		DerpyPrint(highlight("LowGray: ").."The addon "..highlight("Informant").." is required to use this function in the TBC edition of the addon. Informant is part of the Auctioneer suite of addons, and provides Derpy with the needed selling price data for each item.")
+	end
 end
 
 function PurgeGrayItems(dryRun) -- Delete all gray items from bags
-	purgeCount = 0
-	slotCount = 0
-	wastedGoldCount = 0
-	
-	for bag=0,4 
-	do 
-		for slot = 1,GetContainerNumSlots(bag) 
+	if(IsAddOnLoaded("Informant") == 1) then
+		purgeCount = 0
+		slotCount = 0
+		wastedGoldCount = 0
+		
+		for bag=0,4 
 		do 
-			link = GetContainerItemLink(bag, slot)
-			_, itemCount = GetContainerItemInfo(bag, slot)
-			
-			if link then
-				itemInfo = {GetItemInfo(link)}
-				rarity = select(3, unpack(itemInfo))
-				itemSellPrice = select(11, unpack(itemInfo))
+			for slot = 1,GetContainerNumSlots(bag) 
+			do 
+				link = GetContainerItemLink(bag, slot)
+				_, itemCount = GetContainerItemInfo(bag, slot)
 				
-				if (rarity == 0) then -- It's a gray item
-					if(dryRun == false) then
-						PickupContainerItem(bag, slot) 
-						DeleteCursorItem() 
-					end
+				if link then
+					itemInfo = {GetItemInfo(link)}
+					rarity = select(3, unpack(itemInfo))
+					itemID = tonumber(link:match("item:(%d+):"))
+					itemSellPrice = Informant.GetItem(itemID).sell
 					
-					purgeCount = purgeCount + itemCount
-					slotCount = slotCount + 1
-					wastedGoldCount = wastedGoldCount + (itemSellPrice * itemCount)
-				end
+					if (rarity == 0) then -- It's a gray item
+						if(dryRun == false) then
+							PickupContainerItem(bag, slot) 
+							DeleteCursorItem() 
+						end
+						
+						purgeCount = purgeCount + itemCount
+						slotCount = slotCount + 1
+						
+						if(itemSellPrice ~= nil) then
+							wastedGoldCount = wastedGoldCount + (itemSellPrice * itemCount)
+						end
+					end
+				end 
 			end 
-		end 
-	end
-	
-	if(purgeCount > 0) then
-		if(dryRun == true) then
-			StaticPopupDialogs["ConfirmDeleteAllGrayItems"] = {
-				text = "Are you sure you want to purge the "..purgeCount.." |4gray item:gray items; in your bags? This action cannot be undone.\n\nTotal vendor worth:\n"..GetCoinTextureString(wastedGoldCount),
-				button1 = "Yes",
-				button2 = "No",
-				OnAccept = function()
-				  PurgeGrayItems(false)
-				end,
-				timeout = 0,
-				whileDead = true,
-				hideOnEscape = true,
-				preferredIndex = 3
-			}
-			
-			StaticPopup_Show("ConfirmDeleteAllGrayItems")
+		end
+		
+		if(purgeCount > 0) then
+			if(dryRun == true) then
+				StaticPopupDialogs["ConfirmDeleteAllGrayItems"] = {
+					text = "Are you sure you want to purge the "..purgeCount.." |4gray item:gray items; in your bags? This action cannot be undone.\n\nTotal vendor worth:\n"..GetCoinString(wastedGoldCount),
+					button1 = "Yes",
+					button2 = "No",
+					OnAccept = function()
+					  PurgeGrayItems(false)
+					end,
+					timeout = 0,
+					whileDead = true,
+					hideOnEscape = true,
+					preferredIndex = 3
+				}
+				
+				StaticPopup_Show("ConfirmDeleteAllGrayItems")
+			else
+				DerpyPrint(highlight("Gray: ").."Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinString(wastedGoldCount)..".")
+			end
 		else
-			DerpyPrint(highlight("Gray: ").."Purged "..purgeCount.." |4gray item from your bags. If you had sold this item:gray items (taking up "..slotCount.." slots) from your bags. If you had sold these items; to a vendor instead, you would have made "..GetCoinTextureString(wastedGoldCount)..".")
+			DerpyPrint(highlight("Gray: ").."You have no gray items in your bags.")
 		end
 	else
-		DerpyPrint(highlight("Gray: ").."You have no gray items in your bags.")
+		DerpyPrint(highlight("LowGray: ").."The addon "..highlight("Informant").." is required to use this function in the TBC edition of the addon. Informant is part of the Auctioneer suite of addons.")
 	end
 end
 
 function BagWorth() -- Not a reappropriation of PurgeGrayItems() at all, no sir, not on my watch
-	totalItemCount = 0
-	runningGoldCount = 0
-	
-	for bag=0,4 
-	do 
-		for slot = 1,GetContainerNumSlots(bag) 
+	if(IsAddOnLoaded("Informant") == 1) then
+		totalItemCount = 0
+		runningGoldCount = 0
+		
+		for bag=0,4 
 		do 
-			link = GetContainerItemLink(bag, slot)
-			_, itemCount = GetContainerItemInfo(bag, slot)
-			
-			if link then
-				totalItemCount = totalItemCount + itemCount
-				itemSellPrice = select(11, GetItemInfo(link))
-				runningGoldCount = runningGoldCount + (itemSellPrice * itemCount)
+			for slot = 1,GetContainerNumSlots(bag) 
+			do 
+				link = GetContainerItemLink(bag, slot)
+				_, itemCount = GetContainerItemInfo(bag, slot)
+				
+				if link then
+					totalItemCount = totalItemCount + itemCount
+					itemInfo = {GetItemInfo(link)}
+					itemID = tonumber(link:match("item:(%d+):"))
+					itemSellPrice = Informant.GetItem(itemID).sell
+					
+					if(itemSellPrice ~= nil) then
+						runningGoldCount = runningGoldCount + (itemSellPrice * itemCount)
+					end
+				end 
 			end 
-		end 
-	end
-	
-	if(totalItemCount > 0) then
-		DerpyPrint(highlight("BagWorth: ").."You have "..totalItemCount.." |4item in your bags. If you had sold it:items in your bags. If you had sold them; to a vendor, you would have made "..GetCoinTextureString(runningGoldCount)..".")
+		end
+		
+		if(totalItemCount > 0) then
+			DerpyPrint(highlight("BagWorth: ").."You have "..totalItemCount.." |4item in your bags. If you had sold it:items in your bags. If you had sold them; to a vendor, you would have made "..GetCoinString(runningGoldCount)..".")
+		else
+			DerpyPrint(highlight("BagWorth: ").."You have no items in your bags.")
+		end
 	else
-		DerpyPrint(highlight("BagWorth: ").."You have no items in your bags.")
+		DerpyPrint(highlight("LowGray: ").."The addon "..highlight("Informant").." is required to use this function in the TBC edition of the addon. Informant is part of the Auctioneer suite of addons.")
 	end
 end
 
@@ -1061,339 +904,18 @@ function DisbandRaid() -- Remove all raid members
 	end
 end
 
-function RandomPet(silent) -- Summon a random pet with or without funky dialogue
-	if(IsFlying()==1) then
-		DerpyPrint(highlight("RandomPet: ").."Silly "..UnitClass("player")..", you can't summon a pet while flying!");
-	elseif(UnitIsDeadOrGhost("player")) then
-		DerpyPrint(highlight("RandomPet: ").."Silly "..UnitClass("player")..", you can't summon a pet whilst dead!");
-	elseif(GetNumCompanions("CRITTER") == 0 or GetNumCompanions("CRITTER") == nil) then
-		DerpyPrint(highlight("RandomPet: ").."Silly "..UnitClass("player")..", you have no pets to summon!");
+function GetCoinString(copper)
+	local goldColor = "|cFFFFFF00"
+	local silverColor = "|cFFA6A6A6"
+	local copperColor = "|cFFFF8040"
+
+	if(copper > 9999) then
+		copper = tostring(copper)
+		return goldColor .. strsub(copper, 1, strlen(copper)-4) .. "g " .. silverColor .. strsub(copper, strlen(copper)-3, 3) .. "s " .. copperColor .. strsub(copper, -2) .. "c" .. original
+	elseif(copper > 99) then
+		copper = tostring(copper)
+		return silverColor .. strsub(copper, 1, strlen(copper)-2) .. "s " .. copperColor .. strsub(tostring(copper), -2) .. "c" .. original
 	else
-		local petId = math.random(GetNumCompanions("CRITTER"));
-		local id, creatureName = GetCompanionInfo("CRITTER", petId);
-		
-		-- These are shit and someone needs to help me come up with more of them
-		local sayings = {
-			"I summon thee, CRITTER, from the depths of my backpack!", --1
-			"How about some CRITTER?",--2
-			"Come here, CRITTER!",--3
-			"You jelly of my CRITTER?",--4
-			"You so jelly of my CRITTER.",--5
-			"Who needs friends when you've got CRITTER?",--6
-			"I wish CRITTER could join my guild.",--7
-			"Oh, how I've missed you, CRITTER!",--8
-			"CRITTER is gonna kick your ass.",--9
-			"ABRA, KADABRA, ALAKA-CRITTER!",--10
-			"Helloooo, CRITTER!",--11
-			"CRITTER has arrived, ready to kick some ass!",--12
-			"I HAS A CRITTER ^_^",--13
-			"summons a ferocious CRITTER from the depths on the Nether!",--14
-			"whistles, summoning forth a CRITTER!",--15
-			"HELP ME CRITTER I AM DYING OH GOD",--16
-			"CRITTER is my favorite. Maybe.",--17
-			"My, oh my, is that CRITTER I spy?",--18
-			"Y HARO THAR CRITTER"--19
-		}
-		
-		-- COUNT THE ARRAY, HARDCORE STYLE
-		i = 0;
-		while sayings[i+1] ~= nil do
-			i = i + 1;
-		end
-		
-		local sayingId = math.random(i);
-		
-		-- Turn creature name for certain sayings into upper case.
-		if(sayingId == 10 or sayingId == 13 or sayingId == 16 or sayingId == 19) then
-			creatureName = strupper(creatureName);
-		end
-		
-		-- Replace creature name tokens with actual creature names
-		sayings[sayingId] = string.gsub(sayings[sayingId], "CRITTER", creatureName);
-		local petSayingChannel = "SAY";
-		
-		-- Route certain sayings to EMOTE channel
-		if(sayingId == 14 or sayingId == 15) then
-			petSayingChannel = "EMOTE";
-		end
-		
-		-- If silent, don't say shit...
-		if(silent~=1) then
-			if(IsSwimming()==1) then -- ho ho ho, easter eggs!
-				SendChatMessage("BLUB BLUB BLUB BLUB "..strupper(creatureName).."!", "SAY", nil);
-			elseif(IsFalling()==1) then -- ho ho ho, easter eggs!
-				SendChatMessage("OH GOD "..strupper(creatureName).." I AM FALLING TO MY DEATH", "SAY", nil);
-			else
-				SendChatMessage(sayings[sayingId], petSayingChannel, nil);
-			end
-		end
-		
-		-- ... just summon that fucker
-		CallCompanion("CRITTER", petId);
+		return copperColor .. tostring(copper) .. "c" .. original
 	end
-end
-
-function HigherLearningWaypoints() -- Set up Higher Learning waypoints on map
-	if(IsAddOnLoaded("TomTom") == 1) then
-		location = "Dalaran"
-		description = {"Abjuration", "Transmutation", "Necromancy", "Enchantment", "Conjuration", "Divination", "Introduction", "Illusion"}
-		coordinates = {"52.2 54.8", "46.8 40.0", " 46.8 39.1", "43.6 46.7", "31.0 46.7", "26.5 52.2", "56.7 45.5", "64.4 52.4"}
-		
-		local i = 1
-		while coordinates[i] ~= nil
-		do
-			SendSlash("way " .. location .. " " .. coordinates[i] .. " The Schools of Arcane Magic - " .. description[i])
-			i = i + 1
-		end
-	else
-		DerpyPrint(highlight("Bookworm: ").."You must have "..highlight("TomTom").." installed and enabled to use this function.")
-	end
-end
-
--- Options window functions
-function DerpyOptions_OnLoad()
-	DerpyOptionsFrame:RegisterEvent("ADDON_LOADED")
-end
-
-function DerpyOptions_OnEvent(self, event, ...) -- Event handler
-	local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 = ...;
-	if(event=="ADDON_LOADED") then
-		if(arg1=="Derpy") then
-			if PartyAchievementState == "ON" then
-				DerpyCheckBoxPartyAchievement:SetChecked(true)
-			end
-			if MonsterEmoteState == "ON" then
-				DerpyCheckBoxMonsterEmote:SetChecked(true)
-			end
-			if GuildDingState == "ON" then
-				DerpyCheckBoxGuildDing:SetChecked(true)
-			end
-			if FullyRestedState == "ON" then
-				DerpyCheckBoxRestedNotifier:SetChecked(true)
-			end
-			if RepTrackState == "ON" then
-				DerpyCheckBoxRepTrack:SetChecked(true)
-			end
-			if RepAnnounceState == "ON" then
-				DerpyCheckBoxRepAnnounce:SetChecked(true)
-			end
-			if RepCalcState == "ON" then
-				DerpyCheckBoxRepCalc:SetChecked(true)
-			end
-			if AntiShitterState == "ON" then
-				DerpyCheckBoxAntiShitter:SetChecked(true)
-			end
-			if SetRescueState == "ON" then
-				DerpyCheckBoxSetRescue:SetChecked(true)
-			end
-			if iLvLUpdateState == "ON" then
-				DerpyCheckBoxiLvLUpdate:SetChecked(true)
-			end
-			if InnervateState == "ON" then
-				DerpyCheckBoxInnervateNotifier:SetChecked(true)
-			end
-			if SpiderBurritoState == "ON" then
-				DerpyCheckBoxSpiderBurrito:SetChecked(true)
-			end
-			if AutoPurgeState == "ON" then
-				DerpyCheckBoxAutoPurge:SetChecked(true)
-			end
-			if AutoPurgeGrayState == "ON" then
-				DerpyCheckBoxAutoPurgeGray:SetChecked(true)
-			end
-		end
-	end
-end
-
-function DerpyOptionsFrameCloseButton_OnClick()
-	PlaySound("GAMEDIALOGCLOSE","master")
-	DerpyOptionsFrame:Hide()
-end
-
-function DerpyCheckBoxAntiShitter_OnClick()
-	togglePassive("AntiShitter", 0)
-end
-
-function DerpyCheckBoxGuildDing_OnClick()
-	togglePassive("GuildDing", 0)
-end
-
-function DerpyCheckBoxInnervateNotifier_OnClick()
-	togglePassive("Innervate", 0)
-end
-
-function DerpyCheckBoxPartyAchievement_OnClick()
-	togglePassive("PartyAchievement", 0)
-end
-
-function DerpyCheckBoxRepAnnounce_OnClick()
-	togglePassive("RepAnnounce", 0)
-end
-
-function DerpyCheckBoxRestedNotifier_OnClick()
-	togglePassive("FullyRested", 0)
-end
-
-function DerpyCheckBoxSetRescue_OnClick()
-	togglePassive("SetRescue", 0)
-end
-
-function DerpyCheckBoxiLvLUpdate_OnClick()
-	togglePassive("iLvLUpdate", 0)
-end
-
-function DerpyCheckBoxAutoPurge_OnClick()
-	togglePassive("AutoPurge", 0)
-end
-
-function DerpyCheckBoxAutoPurgeGray_OnClick()
-	togglePassive("AutoPurgeGray", 1)
-end
-
-function DerpyCheckBoxMonsterEmote_OnClick()
-	togglePassive("MonsterEmote", 0)
-end
-
-function DerpyCheckBoxRepTrack_OnClick()
-	togglePassive("RepTrack", 0)
-end
-
-function DerpyCheckBoxRepCalc_OnClick()
-	togglePassive("RepCalc", 0)
-end
-
-function DerpyCheckBoxSpiderBurrito_OnClick()
-	togglePassive("SpiderBurrito", 0)
-end
-
-function DerpyButtonAutoPurgeAddItem_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeAddItem"] = {
-		text = "Please enter the name of the item you would like to add to your AutoPurge list:",
-		button1 = "Add item",
-		button2 = "Cancel",
-		hasEditBox = true,
-		timeout = 0,
-		enterClicksFirstButton = true,
-		whileDead = true,
-		hideOnEscape = true,
-		OnAccept = function(self)
-		  AutoPurgeHandler("autopurge add "..strlower(trim(self.editBox:GetText())))
-		end
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeAddItem")
-end
-
-function DerpyButtonAutoPurgeRemoveItem_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeRemoveItem"] = {
-		text = "Please enter the name of the item you would like to remove from your AutoPurge list:",
-		button1 = "Remove item",
-		button2 = "Cancel",
-		hasEditBox = true,
-		timeout = 0,
-		enterClicksFirstButton = true,
-		whileDead = true,
-		hideOnEscape = true,
-		OnAccept = function(self)
-		  AutoPurgeHandler("autopurge remove "..strlower(trim(self.editBox:GetText())))
-		end
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeRemoveItem")
-end
-
-function DerpyButtonAutoPurgeListItems_OnClick()
-	AutoPurgeHandler("autopurge list")
-end
-
-function DerpyButtonAutoPurgeClearItems_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeClearItems"] = {
-		text = "Are you sure you want to clear your character specific AutoPurge list? This action cannot be undone!",
-		button1 = "Yes",
-		button2 = "No",
-		OnAccept = function()
-		  AutoPurgeHandler("autopurge clear")
-		end,
-		timeout = 0,
-		whileDead = true,
-		hideOnEscape = true,
-		preferredIndex = 3
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeClearItems")
-end
-
-function DerpyButtonAutoPurgeGlobalAddItem_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeGlobalAddItem"] = {
-		text = "Please enter the name of the item you would like to add to the global AutoPurge list:",
-		button1 = "Add item",
-		button2 = "Cancel",
-		hasEditBox = true,
-		timeout = 0,
-		enterClicksFirstButton = true,
-		whileDead = true,
-		hideOnEscape = true,
-		OnAccept = function(self)
-		  AutoPurgeHandler("autopurge gadd "..strlower(trim(self.editBox:GetText())))
-		end
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeGlobalAddItem")
-end
-
-function DerpyButtonAutoPurgeGlobalRemoveItem_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeGlobalRemoveItem"] = {
-		text = "Enter the name of the item you would like to remove from the global AutoPurge list:",
-		button1 = "Remove item",
-		button2 = "Cancel",
-		hasEditBox = true,
-		timeout = 0,
-		enterClicksFirstButton = true,
-		whileDead = true,
-		hideOnEscape = true,
-		OnAccept = function(self)
-		  AutoPurgeHandler("autopurge gremove "..strlower(trim(self.editBox:GetText())))
-		end
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeGlobalRemoveItem")
-end
-
-function DerpyButtonAutoPurgeGlobalListItems_OnClick()
-	AutoPurgeHandler("autopurge glist")
-end
-
-function DerpyButtonAutoPurgeGlobalClearItems_OnClick()
-	StaticPopupDialogs["DerpyAutoPurgeGlobalClearItems"] = {
-		text = "Are you sure you want to clear your global AutoPurge list? This action cannot be undone!",
-		button1 = "Yes",
-		button2 = "No",
-		OnAccept = function()
-		  AutoPurgeHandler("autopurge gclear")
-		end,
-		timeout = 0,
-		whileDead = true,
-		hideOnEscape = true,
-		preferredIndex = 3
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeGlobalClearItems")
-end
-
-function DerpyButtonAutoPurgeGrayValue_OnClick()
-		StaticPopupDialogs["DerpyAutoPurgeGrayValue"] = {
-		text = "Please enter the value treshold for AutoPurge_Gray, expressed in copper. For example, '10000' is "..GetCoinTextureString(10000).." and '5000' is "..GetCoinTextureString(5000)..".\n\nThe current treshold is "..GetCoinTextureString(AutoPurgeGrayValue).."\n("..AutoPurgeGrayValue..")",
-		button1 = "Save",
-		button2 = "Cancel",
-		hasEditBox = true,
-		timeout = 0,
-		enterClicksFirstButton = true,
-		whileDead = true,
-		hideOnEscape = true,
-		OnAccept = function(self)
-		  AutoPurgeHandler("autopurge gray "..strlower(trim(self.editBox:GetText())))
-		end
-	}
-	
-	StaticPopup_Show("DerpyAutoPurgeGrayValue")
 end
