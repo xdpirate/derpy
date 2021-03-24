@@ -103,6 +103,27 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("AntiShitter", 1)
     elseif(message == "passive") then
 		ShowPassiveMenu();
+	    elseif(message == "skin") then
+		local highestLevelMob = 0
+
+		for i = 1, GetNumSkillLines(), 1
+		do 
+			local name, _, _, level = GetSkillLineInfo(i)
+			if(name == "Skinning")then
+				if(level < 100) then
+					highestLevelMob = math.floor(((level) / 10) + 10)
+				else
+					highestLevelMob = math.floor(level/5)
+				end
+
+				DerpyPrint("With a \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill of " .. level .. ", the highest level mob you can skin is " .. highestLevelMob .. ".") 
+				break
+			end
+		end
+
+		if(highestLevelMob == 0) then
+			DerpyPrint("You need to have the \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r skill in order to use this function.")
+		end
     elseif(message == "dr" or message == "disband") then
 		DisbandRaid()
     elseif(message == "about") then
@@ -161,6 +182,7 @@ function ShowUsage() -- Show available functions
 	DerpyPrint(highlight("gray/grey").." -- Purge all poor quality (gray) items from your bags")
 	DerpyPrint(highlight("lowgray/lowgrey").." -- Purge the lowest value gray item slot from your bags")
 	DerpyPrint(highlight("bagworth").." -- Show the total worth of the items in your bags")
+	DerpyPrint(highlight("skin").." -- Outputs highest level monster you can skin (Requires \124cff71d5ff\124Hspell:8613\124h[Skinning]\124h\124r)")
 	DerpyPrint(highlight("shitstorm").." -- Initiate a chat shitstorm, TBC-style")
 	DerpyPrint(highlight("dr/disband").." -- Disband a raid group you are the leader of")
 	DerpyPrint(highlight("about").." -- Show information on who made this addon")
@@ -323,7 +345,6 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 			if AutoPurgeState == nil then
 				AutoPurgeState = "OFF" -- Defaults to off, because it's dangerous
-				DerpyPrint("AutoPurgeState = \"OFF\"")
 			end
 			if AutoPurgeGrayState == nil then
 				AutoPurgeGrayState = "OFF" -- Defaults to off, because it's dangerous
