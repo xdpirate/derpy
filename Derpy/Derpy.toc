@@ -6,6 +6,6 @@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ##SavedVariables: PartyAchievementState, GuildDingState, FullyRestedState, MonsterEmoteState, RepTrackState, RepAnnounceState, InnervateState, GlobalAutoPurgeItems, SpiderBurritoState, AntiShitterState, SetRescueState, iLvLUpdateState, RepCalcState
-##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose, AutoPurgeGrayState, AutoPurgeGrayValue
+##SavedVariablesPerCharacter: AutoPurgeState, AutoPurgeItems, AutoPurgeVerbose, AutoPurgeGrayState, AutoPurgeGrayValue, HonorGoalValue
 Derpy.lua
 Derpy.xml

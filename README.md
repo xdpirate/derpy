@@ -8,6 +8,7 @@ When turned on, these functions will work automatically:
 - **AutoPurge** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Allows you to maintain a list of items to be automatically purged from your bags (defaults to *off*)
 - **CapShard** ![Wrath of the Lich King][wotlk] -- Caps the amount of Soul Shards you carry to a certain number. When this is on, any excess shards are automatically deleted (defaults to *off*)
 - **Guild Ding Notifier** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Lets your guild know when you level up! (defaults to *off*)
+- **HonorGoal** ![Cataclysm][cata] -- Lets you set an honor point goal and get updates whenever you earn honor (defaults to *off*)
 - **iLvLUpdate** ![Cataclysm][cata] -- Notify you when your average equipped item level changes (defaults to *off*)
 - **Innervate Notifier** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Sends a whisper to the receiving target when you cast Innervate on them (defaults to *on*)
 - **Monster Emote** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Emphasizes monster emotes such as "Murloc runs away in fear!", by displaing them in the top error frame (defaults to *on*)

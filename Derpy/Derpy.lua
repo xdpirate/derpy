@@ -51,6 +51,7 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
 	DerpyFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- For iLvLUpdate	
 	DerpyFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- For iLvLUpdate	to get accurate average item level upon login
+	DerpyFrame:RegisterEvent("CHAT_MSG_CURRENCY")
 	
 	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
 	DerpyRepFrame:Hide()
@@ -128,6 +129,39 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("SetRescue", 1)
     elseif(message == "ilvlupdate") then
 		togglePassive("iLvLUpdate", 1)
+    elseif(starts_with(message, "honor")) then
+        if(message == "honor") then
+			DerpyPrint("Usage: /dr honor XX - where XX is the amount of honor you want to set as your goal. To disable, set a value of zero (0). Current value is " .. highlight(HonorGoalValue) .. ".")
+		else
+			local num = tonumber(strmatch(message, "honor (%d+)"))
+			if(num ~= nil) then
+				if(num > 0 and num < 4001) then
+                    local listSize = GetCurrencyListSize()
+        
+                    for i = 1, listSize do
+                        local name, _, _, _, _, count = GetCurrencyListInfo(i)
+                        if(name == "Honor Points") then
+                            if(count >= num) then
+                                DerpyPrint(highlight("HonorGoal: ") .. "You already have more than " .. num .. " honor. You currently have " .. highlight(count) .. " honor points. HonorGoal was not changed.")
+                            elseif(count < num) then
+                                HonorGoalValue = num
+                                DerpyPrint(highlight("HonorGoal: ") .. "is now set to " .. highlight(num) .. ". You currently have " .. highlight(count) .. " honor, " .. (HonorGoalValue - count) .. " to go!")
+                            end
+                            
+                            return
+                        end
+                    end
+                
+					HonorGoalValue = num
+					DerpyPrint(highlight("HonorGoal: ") .. "is now set to "..num..".")
+                elseif(num == 0) then
+                    HonorGoalValue = num
+					DerpyPrint(highlight("HonorGoal: ") .. "is now disabled.")
+				else
+					DerpyPrint(highlight("HonorGoal: ") .. "Given value must be a positive integer with a value between 1 and 4000, and greater than your current amount of honor.")
+				end
+			end
+		end
     elseif(message == "passive") then
 		ShowPassiveMenu();
     elseif(message == "dr" or message == "disband") then
@@ -459,6 +493,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 				end
 			end
 		end
+        
 	elseif(event=="PLAYER_EQUIPMENT_CHANGED") then -- iLvLUpdate
 		if(iLvLUpdateState~="OFF") then
 			local newItemLevel = math.floor(select(2, GetAverageItemLevel()))
@@ -580,6 +615,34 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 	
+	elseif(event=="CHAT_MSG_CURRENCY") then -- HonorGoal
+        local _, _, num = strmatch(arg1, "You receive currency: (.+)Honor Points(.+) x(%d+)")
+        if(num ~= nil) then            
+            num = tonumber(num)
+            
+            if(HonorGoalValue > 0) then
+                local listSize = GetCurrencyListSize()
+                
+                for i = 1, listSize do
+                    local name, _, _, _, _, count = GetCurrencyListInfo(i)
+                    if(name == "Honor Points") then
+                        if(HonorGoalValue == nil) then
+                            HonorGoalValue = 0
+                        end
+                        
+                        if(count >= HonorGoalValue) then
+                            DerpyPrint(highlight("HonorGoal: ") .. "You've reached your HonorGoal! You now have " .. highlight(count) .. " honor points.")
+                            HonorGoalValue = 0
+                        elseif(count < HonorGoalValue) then
+                            DerpyPrint(highlight("HonorGoal: ").."You now have " .. highlight(count) .. " honor - only " .. highlight(HonorGoalValue - count) .. " to go! (" .. HonorGoalValue .. ")")
+                        end
+                        
+                        return
+                    end
+                end
+            end
+        end
+    
 	elseif(event=="CHAT_MSG_SYSTEM") then -- RepAnnounce
 		if(RepAnnounceState~="OFF") then
 			currentChatMessage = arg1
@@ -750,10 +813,10 @@ function AutoPurgeHandler(message)
 			itemName = strlower(itemName)
 			
 			if(has_value(GlobalAutoPurgeItems, itemName)) then
-				DerpyPrint(highlight("AutoPurge: ").."\""..itemName.."\" is already in the autopurge list!")
+				DerpyPrint(highlight("AutoPurge: ").."\""..itemName.."\" is already in the global autopurge list!")
 			else
 				table.insert(GlobalAutoPurgeItems, itemName)
-				DerpyPrint(highlight("AutoPurge: ").."Added \""..itemName.."\" to the autopurge list!")
+				DerpyPrint(highlight("AutoPurge: ").."Added \""..itemName.."\" to the global autopurge list!")
 			end
 		else
 			if(has_value(GlobalAutoPurgeItems, item)) then
