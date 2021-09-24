@@ -53,14 +53,14 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- For iLvLUpdate	to get accurate average item level upon login
 	DerpyFrame:RegisterEvent("CHAT_MSG_CURRENCY")
 	
-	DerpyRepFrame = CreateFrame("Frame", "DerpyRepFrame", UIParent)
-	DerpyRepFrame:Hide()
-	DerpyRepFrame:ClearAllPoints()
-	DerpyRepFrame:SetPoint("TOP", UIParent, "CENTER", 0, 300)
-	DerpyRepFrame:SetWidth(350)
-	DerpyRepFrame:SetHeight(80)
-	DerpyRepFrame:SetFrameStrata("DIALOG")
-	DerpyRepFrame:SetBackdrop({
+	DerpyPopUpFrame = CreateFrame("Frame", "DerpyPopUpFrame", UIParent)
+	DerpyPopUpFrame:Hide()
+	DerpyPopUpFrame:ClearAllPoints()
+	DerpyPopUpFrame:SetPoint("TOP", UIParent, "CENTER", 0, 300)
+	DerpyPopUpFrame:SetWidth(350)
+	DerpyPopUpFrame:SetHeight(80)
+	DerpyPopUpFrame:SetFrameStrata("DIALOG")
+	DerpyPopUpFrame:SetBackdrop({
 		  bgFile = [[Interface\GLUES\MODELS\UI_NightElf\aa_NE_sky]], 
 		  edgeFile = [[Interface\DialogFrame\UI-DialogBox-Gold-Border]], 
 		  tile = 0,
@@ -68,10 +68,10 @@ function Derpy_OnLoad() -- Addon loaded
 		  insets = { left = 4, right = 4, top = 4, bottom = 4 }
 	})
 
-	DerpyRepFrame.text = DerpyRepFrame:CreateFontString(nil, "ARTWORK")
-	DerpyRepFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
-	DerpyRepFrame.text:SetTextColor(1, 1, 1)
-	DerpyRepFrame.text:SetAllPoints()
+	DerpyPopUpFrame.text = DerpyPopUpFrame:CreateFontString(nil, "ARTWORK")
+	DerpyPopUpFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
+	DerpyPopUpFrame.text:SetTextColor(1, 1, 1)
+	DerpyPopUpFrame.text:SetAllPoints()
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -631,8 +631,22 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
                         end
                         
                         if(count >= HonorGoalValue) then
-                            DerpyPrint(highlight("HonorGoal: ") .. "You've reached your HonorGoal! You now have " .. highlight(count) .. " honor points.")
                             HonorGoalValue = 0
+                            
+                            DerpyPrint(highlight("HonorGoal: ") .. "You've reached your HonorGoal! You now have " .. highlight(count) .. " honor points.")
+                            
+                            DerpyPopUpFrame.text:SetText("You've reached your HonorGoal!\nYou now have " .. highlight(count) .. " honor points.")
+                            UIFrameFadeIn(DerpyPopUpFrame, 1, 0, 1)
+                            PlaySoundFile("Sound\\Interface\\iQuestComplete.ogg", "master")
+                            
+                            local t = 5
+                            DerpyPopUpFrame:SetScript("OnUpdate", function(self, elapsed)
+                                 t = t - elapsed
+                                 if t <= 0 then
+                                    DerpyPopUpFrame:SetScript("OnUpdate", nil)
+                                    UIFrameFadeOut(DerpyPopUpFrame, 1, 1, 0)
+                                 end
+                            end)
                         elseif(count < HonorGoalValue) then
                             DerpyPrint(highlight("HonorGoal: ").."You now have " .. highlight(count) .. " honor - only " .. highlight(HonorGoalValue - count) .. " to go! (" .. HonorGoalValue .. ")")
                         end
@@ -650,16 +664,16 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			if(starts_with(currentChatMessage, "You are now ")) then
 				newLevel, factionName = strmatch(currentChatMessage, "You are now (%a+) with (.*)\.")
 				if(newLevel ~= nil and factionName ~= nil) then
-					DerpyRepFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
-					UIFrameFadeIn(DerpyRepFrame, 1, 0, 1)
+					DerpyPopUpFrame.text:SetText("You are now |cFF"..factionStandingColors[newLevel]..newLevel.."|r with\n|cFFFFF569"..factionName.."|r!")
+					UIFrameFadeIn(DerpyPopUpFrame, 1, 0, 1)
 					PlaySoundFile("Sound\\Spells\\DivineStormDamage1.wav", "master")
 					
 					local t = 5
-					DerpyRepFrame:SetScript("OnUpdate", function(self, elapsed)
+					DerpyPopUpFrame:SetScript("OnUpdate", function(self, elapsed)
 						 t = t - elapsed
 						 if t <= 0 then
-							DerpyRepFrame:SetScript("OnUpdate", nil)
-							UIFrameFadeOut(DerpyRepFrame, 1, 1, 0)
+							DerpyPopUpFrame:SetScript("OnUpdate", nil)
+							UIFrameFadeOut(DerpyPopUpFrame, 1, 1, 0)
 						 end
 					end)
 				end
