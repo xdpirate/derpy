@@ -12,6 +12,7 @@ When turned on, these functions will work automatically:
 - **iLvLUpdate** ![Cataclysm][cata] -- Notify you when your average equipped item level changes (defaults to *off*)
 - **Innervate Notifier** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Sends a whisper to the receiving target when you cast Innervate on them (defaults to *on*)
 - **Monster Emote** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Emphasizes monster emotes such as "Murloc runs away in fear!", by displaing them in the top error frame (defaults to *on*)
+- **No Deal** ![Cataclysm][cata] -- Lets you maintain a list of items that the addon will prevent you from selling. Great for things you want to keep, but have a sale value (enchanting rods, etc)
 - **Party Achievement Notifier** ![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Posts a notification about your gained achievements to the party chat, for grouping with guild outsiders (defaults to *off*)
 - **RepTrack** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Changes your currently watched faction ("display as bar") whenever you gain reputation (defaults to *on*)
 - **RepAnnounce** ![The Burning Crusade][tbc]![Wrath of the Lich King][wotlk]![Cataclysm][cata] -- Shows you a discreet notification window and plays a non-intrusive sound whenever your standing with a faction changes (defaults to *on*)

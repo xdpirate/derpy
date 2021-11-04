@@ -16,8 +16,6 @@ local lastInnervateMessageTime = nil
 local lastWebWrapMessageTime = nil
 local lastAvgItemLevel = nil
 
-local innervateLink = "\124cff71d5ff\124Hspell:29166\124h[Innervate]\124h\124r"
-
 factionStandingColors = {
 	["Hated"] = "cc2222",
 	["Hostile"] = "ff0000",
@@ -48,10 +46,10 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyFrame:RegisterEvent("BAG_UPDATE") -- For AutoPurge
 	DerpyFrame:RegisterEvent("PARTY_MEMBERS_CHANGED") -- For AntiShitter
 	DerpyFrame:RegisterEvent("RAID_ROSTER_UPDATE") -- For AntiShitter
-	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue
+	DerpyFrame:RegisterEvent("MERCHANT_UPDATE") -- For SetRescue and NoDeal
 	DerpyFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- For iLvLUpdate	
 	DerpyFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- For iLvLUpdate	to get accurate average item level upon login
-	DerpyFrame:RegisterEvent("CHAT_MSG_CURRENCY")
+	DerpyFrame:RegisterEvent("CHAT_MSG_CURRENCY") -- For HonorGoal
 	
 	DerpyPopUpFrame = CreateFrame("Frame", "DerpyPopUpFrame", UIParent)
 	DerpyPopUpFrame:Hide()
@@ -72,6 +70,10 @@ function Derpy_OnLoad() -- Addon loaded
 	DerpyPopUpFrame.text:SetFont("Fonts\\FRIZQT__.TTF", 14)
 	DerpyPopUpFrame.text:SetTextColor(1, 1, 1)
 	DerpyPopUpFrame.text:SetAllPoints()
+    
+    if(HonorGoalValue == nil) then
+        HonorGoalValue = 0
+    end
 end
 
 function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
@@ -127,11 +129,14 @@ function SlashCmdList.DERPY(msg, editbox) -- Handler for slash commands
 		togglePassive("AntiShitter", 1)
     elseif(message == "setrescue") then
 		togglePassive("SetRescue", 1)
+	elseif(starts_with(message, "nodeal")) then
+		NoDealHandler(message)
+		--togglePassive("NoDeal", 1)
     elseif(message == "ilvlupdate") then
 		togglePassive("iLvLUpdate", 1)
     elseif(starts_with(message, "honor")) then
         if(message == "honor") then
-			DerpyPrint("Usage: /dr honor XX - where XX is the amount of honor you want to set as your goal. To disable, set a value of zero (0). Current value is " .. highlight(HonorGoalValue) .. ".")
+            DerpyPrint("Usage: /dr honor XX - where XX is the amount of honor you want to set as your goal. To disable, set a value of zero (0). Current value is " .. highlight(HonorGoalValue) .. ".")
 		else
 			local num = tonumber(strmatch(message, "honor (%d+)"))
 			if(num ~= nil) then
@@ -239,6 +244,7 @@ function ShowPassiveMenu() -- List states and descriptions of passive functions
 	DerpyPrint("(/derp can be substituted for /dr or /derpy)")
 	DerpyPrint("Toggle passive features:"..original)
 	DerpyPrint(highlight("autopurge").." -- (Submenu) Automatically purge specified items (Currently "..highlight(AutoPurgeState)..")")
+	DerpyPrint(highlight("nodeal").." -- (Submenu) Toggle automatic buyback of specified items when at a vendor (Currently "..highlight(NoDealState)..")")
 	DerpyPrint(highlight("partyachi").." -- Toggle Party Achievement notification (Currently "..highlight(PartyAchievementState)..")")
 	DerpyPrint(highlight("gding").." -- Toggle Guild Ding notifications (Currently "..highlight(GuildDingState)..")")
 	DerpyPrint(highlight("rested").." -- Toggle resting notifications (Currently "..highlight(FullyRestedState)..")")
@@ -347,6 +353,15 @@ function togglePassive(which, verbose) -- Toggle passive functions on/off
 		if(verbose==1) then
 			DerpyPrint(highlight("SetRescue").." is now "..SetRescueState..".")
 		end
+	elseif(which=="NoDeal") then
+		if(NoDealState == "ON") then
+			NoDealState = "OFF"
+		else
+			NoDealState = "ON"
+		end
+		if(verbose==1) then
+			DerpyPrint(highlight("NoDeal").." is now "..NoDealState..".")
+		end
 	elseif(which=="iLvLUpdate") then
 		if(iLvLUpdateState == "ON") then
 			iLvLUpdateState = "OFF"
@@ -407,6 +422,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			if(GlobalAutoPurgeItems == nil) then
 				GlobalAutoPurgeItems = {}
 			end
+			if(NoDealItems == nil) then -- Initialize the NoDeal item list
+				NoDealItems = {}
+			end
 			if PartyAchievementState == nil then
 				PartyAchievementState = "OFF" -- Defaults to off, because it's cancerous
 			end
@@ -433,6 +451,9 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 			if SetRescueState == nil then
 				SetRescueState = "ON" -- Defaults to on, because it's useful
+			end
+			if NoDealState == nil then
+				NoDealState = "OFF" -- Defaults to off, because it needs to be configured
 			end
 			if iLvLUpdateState == nil then
 				iLvLUpdateState = "OFF" -- Defaults to off, because it can be spammy
@@ -462,7 +483,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 		
 	elseif(event=="PARTY_MEMBERS_CHANGED" or event=="RAID_ROSTER_UPDATE") then -- AntiShitter
 		if(AntiShitterState~="OFF") then
-			if(difftime(time(), antiShitterLastTimestamp) > 29) then -- Avoids notifying more often than every 30 seconds
+			if(difftime(time(), antiShitterLastTimestamp) >= 60) then -- Avoids notifying more often than every 60 seconds
 				-- Build refreshed table of ignored players
 				local ignoredPlayers = {} 
 				local numIgnored = GetNumIgnores() 
@@ -513,7 +534,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 			end
 		end
 		
-	elseif(event=="MERCHANT_UPDATE") then -- SetRescue
+	elseif(event=="MERCHANT_UPDATE") then -- SetRescue and NoDeal
 		if(SetRescueState~="OFF") then
 			local eqSetCount = GetNumEquipmentSets()
 				
@@ -538,6 +559,22 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
 								end
 							end
 						end
+					end
+				end
+			end
+		end
+
+		if(NoDealState~="OFF") then
+			for k = 1, GetNumBuybackItems() do
+				local link = GetBuybackItemLink(k)
+
+				if link then
+					local buyBackItemName = strlower((GetItemInfo(link:match("item:(%d+):"))))
+					
+					if has_value(NoDealItems, buyBackItemName) then
+						BuybackItem(k)
+						DerpyPrint(highlight("NoDeal: ")..link.." is in your NoDeal list and has been automatically bought back from the vendor. No deal!")
+						return
 					end
 				end
 			end
@@ -620,7 +657,7 @@ function Derpy_OnEvent(self, event, ...) -- Event handler
         if(num ~= nil) then            
             num = tonumber(num)
             
-            if(HonorGoalValue > 0) then
+            if(HonorGoalValue ~= nil and HonorGoalValue > 0) then
                 local listSize = GetCurrencyListSize()
                 
                 for i = 1, listSize do
@@ -952,6 +989,99 @@ function AutoPurgeHandler(message)
 		DerpyPrint(highlight("gremove item name").." -- Remove the specified item from the global autopurge list")
 		DerpyPrint(highlight("gclear").." -- Remove ALL items from the global autopurge list")
 		
+	end
+end
+
+function NoDealHandler(message)
+	local inputString = message
+	
+	if(starts_with(inputString, "nodeal list")) then
+		local itemNo = 0
+		local totalItems = table.getn(NoDealItems)
+		if totalItems > 0 then
+			DerpyPrint(highlight("NoDeal: ").."Items currently in the NoDeal list:")
+			for itemNo=0,totalItems
+			do
+				local currentItem = NoDealItems[itemNo]
+				if(currentItem~=nil) then
+					DerpyPrint(itemNo..": "..currentItem)
+				end
+			end
+		else
+			DerpyPrint(highlight("NoDeal: ").."There are currently no items in the NoDeal list!")
+		end		
+	elseif(starts_with(inputString, "nodeal add")) then
+		local item = trim(string.sub(inputString, 11))
+		
+		if(item == nil or item == "") then
+			DerpyPrint(highlight("NoDeal: ").."Please specify a valid item name or item link")
+			DerpyPrint("For example: "..highlight("/derp nodeal add runed elementium rod"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(NoDealItems, itemName)) then
+				DerpyPrint(highlight("NoDeal: ").."\""..itemName.."\" is already in the NoDeal list!")
+			else
+				table.insert(NoDealItems, itemName)
+				DerpyPrint(highlight("NoDeal: ").."Added \""..itemName.."\" to the NoDeal list!")
+			end
+		else
+			if(has_value(NoDealItems, item)) then
+				DerpyPrint(highlight("NoDeal: ").."\""..item.."\" is already in the NoDeal list!")
+			else
+				table.insert(NoDealItems, item)
+				DerpyPrint(highlight("NoDeal: ").."Added \""..item.."\" to the NoDeal list!")
+			end
+		end
+	elseif(starts_with(inputString, "nodeal remove")) then
+		local item = trim(string.sub(inputString, 14))
+		
+		if(item == nil or item == "") then
+			DerpyPrint(highlight("NoDeal: ").."Please specify a valid item name.")
+			DerpyPrint("For example: "..highlight("/derp nodeal remove runed elementium rod"))
+		elseif(starts_with(item, "|c")) then
+			itemName = GetItemInfo(item)
+			itemName = strlower(itemName)
+			
+			if(has_value(NoDealItems, itemName)) then
+				local itemIndex = table_index(NoDealItems, itemName)
+				table.remove(NoDealItems, itemIndex)
+				DerpyPrint(highlight("NoDeal: ").."Removed \""..itemName.."\" from the NoDeal list!")
+			else
+				DerpyPrint(highlight("NoDeal: ").."\""..itemName.."\" was not found in the NoDeal list!")
+			end
+		else
+			if(has_value(NoDealItems, item)) then
+				local itemIndex = table_index(NoDealItems, item)
+				table.remove(NoDealItems, itemIndex)
+				DerpyPrint(highlight("NoDeal: ").."Removed \""..item.."\" from the NoDeal list!")
+			else
+				DerpyPrint(highlight("NoDeal: ").."\""..item.."\" was not found in the NoDeal list!")
+			end
+		end
+	elseif(starts_with(inputString, "nodeal clear")) then
+		NoDealItems = {}
+		DerpyPrint(highlight("NoDeal: ").."NoDeal list cleared.")
+	elseif(starts_with(inputString, "nodeal toggle")) then
+		togglePassive("NoDeal", 1)
+	elseif(starts_with(inputString, "nodeal guide")) then
+		DerpyPrint(highlight("*").." The NoDeal list applies to all characters on your account.")
+		DerpyPrint(highlight("*").." Items are added by name or by item link.")
+		DerpyPrint(highlight("*").." The character case of the item name to be added or removed doesn't matter.")
+		DerpyPrint("Examples:")
+		DerpyPrint(highlight("/dr nodeal add runed elementium rod").." -- Adds Runed Elementium Rod to the autopurge list")
+		DerpyPrint(highlight("/dr nodeal remove pet rock").." -- Removes Pet Rock from the global autopurge list")
+	else
+		DerpyPrint("Usage: "..color.."/derp nodeal "..highlight("<command>"))
+		DerpyPrint("(/derp can be substituted for /dr or /derpy)")
+		DerpyPrint("Available commands:")
+		DerpyPrint(highlight("guide").." -- Read this! Shows notes and help for NoDeal")
+		DerpyPrint(highlight("toggle").." -- Turn NoDeal on/off (Currently "..highlight(NoDealState)..")")
+		DerpyPrint(highlight("list").." -- List items currently being autopurged")
+		DerpyPrint(highlight("add item name").." -- Add the specified item to the NoDeal list")
+		DerpyPrint(highlight("remove item name").." -- Remove the specified item from the NoDeal list")
+		DerpyPrint(highlight("clear").." -- Remove ALL items from the NoDeal list")		
 	end
 end
 
