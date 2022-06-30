@@ -1,4 +1,4 @@
-## Interface: 40300
+## Interface: 50400
 ## Title-enGB: Derpy
 ## Author: Cursetits of Apollo 2
 ## Version: 2.2

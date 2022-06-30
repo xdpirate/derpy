@@ -9,7 +9,7 @@
 local color = "|cFF66EE66" -- We like green
 local highlightColor = "|cFF9BFF00"
 local original = "|r"
-local CurrentLevelCap = 85 -- With lack of a function to retrieve this dynamically...
+local CurrentLevelCap = 90 -- With lack of a function to retrieve this dynamically...
 local repTrackLastTimestamp = time()
 local antiShitterLastTimestamp = time()
 local lastInnervateMessageTime = nil
