@@ -118,8 +118,12 @@ Calculates and outputs your current speed. Useful for finding out which speed bu
   - ![WotLK][wotlk]
   [Wrath of the Lich King (3.3.5a)](https://github.com/xdpirate/derpy/archive/wotlk.zip)
 
-  - ![Cataclysm][cata]![Mists of Pandaria][mop]
+  - ![Cataclysm][cata]
   [Cataclysm (4.3.4)](https://github.com/xdpirate/derpy/archive/master.zip)
+  
+  - ![Mists of Pandaria][mop]
+  [Mists of Pandaria (5.4.8)](https://github.com/xdpirate/derpy/archive/mop.zip)
+  
 2. Open the downloaded archive
 3. Enter the "Derpy-master", "Derpy-wotlk" or "Derpy-tbc" folder, and extract the folder named "Derpy" into "WoW Install Folder\Interface\AddOns"
 
